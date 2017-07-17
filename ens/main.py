@@ -5,6 +5,7 @@ from web3utils.contracts import EthContractSugar
 from web3utils.hex import EMPTY_SHA
 
 from ens import abis
+from ens.registrar import Registrar
 
 ENS_MAINNET_ADDR = '0x314159265dd8dbb310642f98f50c066173c1259b'
 
@@ -15,9 +16,10 @@ class ENS:
     def __init__(self, addr=None, custom_web3=None):
         self.web3 = custom_web3 if custom_web3 else web3
         ens_addr = addr if addr else ENS_MAINNET_ADDR
-        contract = EthContractSugar(self.web3.eth.contract)
-        self.ens = contract(abi=abis.ENS, address=ens_addr)
-        self._resolverContract = contract(abi=abis.RESOLVER)
+        self._contract = EthContractSugar(self.web3.eth.contract)
+        self.ens = self._contract(abi=abis.ENS, address=ens_addr)
+        self._resolverContract = self._contract(abi=abis.RESOLVER)
+        self.registrar = Registrar(self)
 
     def resolve(self, name_string, lookup='addr'):
         resolver = self.resolver(name_string)
@@ -49,6 +51,10 @@ class ENS:
     def reverser(self, target_address):
         reversed_domain = self.reverse_domain(target_address)
         return self.resolver(reversed_domain)
+
+    def owner(self, full_name):
+        node = self.namehash(full_name)
+        return self.ens.owner(node)
 
     def _reverse_node(self, address):
         domain = self.reverse_domain(address)
