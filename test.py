@@ -29,4 +29,4 @@ def test_registry_entries(name, deed_addr):
             web3.eth.contract(address=deed_addr),
             ]
     assert entries[1].owner() == ens.owner(name)
-    # ^ this isn't true for all names, just these
+    # ^ this isn't true for all names, just for the selected tests
