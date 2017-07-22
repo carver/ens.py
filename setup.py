@@ -64,5 +64,5 @@ setup(
     py_modules=['ens'],
 
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['web3utils<1'],
+    install_requires=['web3utils<1', 'pytz'],
 )

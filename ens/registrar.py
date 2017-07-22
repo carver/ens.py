@@ -1,7 +1,13 @@
 
+from datetime import datetime
+from enum import IntEnum
+
+import pytz
+from web3 import Web3
+from web3utils import STRING_ENCODING
 from web3utils.hex import is_empty_hex
 
-from ens import abis
+from ens import abis, main
 
 REGISTRAR_NAME = 'eth'
 
@@ -13,6 +19,22 @@ GAS_DEFAULT = {
 
 START_GAS_CONSTANT = 25000
 START_GAS_MARGINAL = 39000
+
+MIN_BID = Web3.toWei('0.01', 'ether')
+
+
+class Status(IntEnum):
+    '''
+    Current status of the auction for a label. For more info:
+    http://docs.ens.domains/en/latest/userguide.html#starting-an-auction
+    '''
+    Open = 0
+    Auction = 1
+    Owned = 2
+    Forbidden = 3
+    Reveal = 4
+    NotYetAvailable = 5
+
 
 class Registrar:
     """
@@ -31,95 +53,138 @@ class Registrar:
         self._core = None
         self._deedContract = ens._contract(abi=abis.DEED)
 
-    def entries(self, name):
-        label = self._to_label(name)
-        label_hash = self.web3.sha3(label, encoding='bytes')
+    def entries(self, label):
+        label = self._to_label(label)
+        label_hash = self.ens.labelhash(label)
         return self.entries_by_hash(label_hash)
 
-    def start(self, names, **modifier_dict):
-        if not names:
+    def start(self, labels, **modifier_dict):
+        if not labels:
             return
+        if isinstance(labels, (str, bytes)):
+            labels = [labels]
         if not modifier_dict:
             modifier_dict = {'transact': {}}
         if 'transact' in modifier_dict:
             transact_dict = modifier_dict['transact']
             if 'gas' not in transact_dict:
-                transact_dict['gas'] = START_GAS_CONSTANT + START_GAS_MARGINAL * len(names) 
-            if transact_dict['gas'] > self.__last_gaslimit():
+                transact_dict['gas'] = self._estimate_start_gas(labels)
+            if transact_dict['gas'] > self._last_gaslimit():
                 raise ValueError('There are too many auctions to fit in a block -- start fewer.')
-        labels = [self._to_label(name) for name in names]
-        label_hashes = [self.web3.sha3(label, encoding='bytes') for label in labels]
+        labels = [self._to_label(label) for label in labels]
+        label_hashes = [self.ens.labelhash(label) for label in labels]
         return self.core.startAuctions(label_hashes, **modifier_dict)
 
-    def bid(self, name, amount, secret, **modifier_dict):
+    def bid(self, label, amount, secret, **modifier_dict):
         """
+        @param label to bid on
         @param amount (in wei) to bid
         @param secret you MUST keep a copy of this to avoid burning your entire bid
         """
         if not modifier_dict:
             modifier_dict = {'transact': {}}
         if 'transact' in modifier_dict:
-            self.__default_gas(modifier_dict['transact'], 'reveal')
+            self.__default_gas(modifier_dict['transact'], 'bid')
         # Enforce that sending account must be specified, to create the sealed bid
-        modifier_vals = modifier_dict[list(modifier_dict).pop()]
-        if 'from' not in modifier_vals:
-            raise ValueError("You must specify the sending account when creating a bid")
-        label = self._to_label(name)
-        bid_hash = self._bid_hash(label, modifier_vals['from'], amount, secret)
+        sender = self.__require_sender(modifier_dict)
+        if amount < MIN_BID:
+            raise ValueError("You must bid at least 0.01 ether")
+        label = self._to_label(label)
+        bid_hash = self._bid_hash(label, sender, amount, secret)
         return self.core.newBid(bid_hash, **modifier_dict)
 
-    def reveal(self, name, value, secret, **modifier_dict):
+    def reveal(self, label, amount, secret, **modifier_dict):
         if not modifier_dict:
             modifier_dict = {'transact': {}}
         if 'transact' in modifier_dict:
             self.__default_gas(modifier_dict['transact'], 'reveal')
-        label = self._to_label(name)
-        label_hash = self.web3.sha3(label, encoding='bytes')
-        secret_hash = self.web3.sha3(secret, encoding='bytes')
-        return self.core.unsealBid(label_hash, value, secret_hash, **modifier_dict)
+        sender = self.__require_sender(modifier_dict)
+        label = self._to_label(label)
+        bid_hash = self._bid_hash(label, sender, amount, secret)
+        if not self.core.sealedBids(sender, bid_hash):
+            raise InvalidBidHash
+        label_hash = self.ens.labelhash(label)
+        if isinstance(secret, str):
+            secret = secret.encode(STRING_ENCODING)
+        secret_hash = self.web3.sha3(secret)
+        return self.core.unsealBid(label_hash, amount, secret_hash, **modifier_dict)
     unseal = reveal
 
-    def finalize(self, name, **modifier_dict):
+    def finalize(self, label, **modifier_dict):
         if not modifier_dict:
             modifier_dict = {'transact': {}}
         if 'transact' in modifier_dict:
             self.__default_gas(modifier_dict['transact'], 'finalize')
-        label_hash = self.web3.sha3(name, encoding='bytes')
+        label = self._to_label(label)
+        label_hash = self.ens.labelhash(label)
         return self.core.finalizeAuction(label_hash, **modifier_dict)
 
     def entries_by_hash(self, label_hash):
+        '''
+        @returns a 5-item collection in this order:
+            # Status
+            # deed contract
+            # registration datetime (in UTC)
+            # value held on deposit
+            # value of largest bid
+        '''
+        assert isinstance(label_hash, (bytes, bytearray))
         entries = self.core.entries(label_hash)
+        entries[0] = Status(entries[0])
         entries[1] = None if is_empty_hex(entries[1]) else self._deedContract(entries[1])
+        close_date = None
+        if entries[2]:
+            close_date = datetime.fromtimestamp(entries[2], pytz.utc)
+        entries[2] = close_date
         return entries
 
     @property
     def core(self):
         if not self._core:
-            self._core = self._coreContract(self.ens.owner(REGISTRAR_NAME))
+            self._core = self._coreContract(address=self.ens.owner(REGISTRAR_NAME))
         return self._core
 
     def __default_gas(self, transact_dict, action):
         if 'gas' not in transact_dict:
             transact_dict['gas'] = GAS_DEFAULT[action]
 
-    def __last_gaslimit(self):
+    def _estimate_start_gas(self, labels):
+        return START_GAS_CONSTANT + START_GAS_MARGINAL * len(labels)
+
+    def __require_sender(self, modifier_dict):
+        modifier_vals = modifier_dict[list(modifier_dict).pop()]
+        if 'from' not in modifier_vals:
+            raise TypeError("You must specify the sending account")
+        return modifier_vals['from']
+
+    def _last_gaslimit(self):
         last_block = self.web3.eth.getBlock('latest')
         return last_block.gasLimit
 
     def _bid_hash(self, label, bidder, bid_amount, secret):
-        label_hash = self.web3.sha3(label, encoding='bytes')
+        label_hash = self.ens.labelhash(label)
         secret_hash = self.web3.sha3(secret, encoding='bytes')
         return self.core.shaBid(label_hash, bidder, bid_amount, secret_hash)
 
-    def _to_label(self, name):
-        label = name
+    def _to_label(self, label_or_name):
+        '''
+        Convert from a name, like 'ethfinex.eth', to a label, like 'ethfinex'
+        If name is already a label, this should be a noop, except for converting to a string
+        '''
+        label = label_or_name
+        if isinstance(label, (bytes, bytearray)):
+            label = str(label, encoding=main.STRING_ENCODING)
         if '.' in label:
             pieces = label.split('.')
-            if len(pieces) < 2:
-                raise TypeError(
+            if len(pieces) != 2:
+                raise ValueError(
                         "You must specify a label, like 'tickets' "
                         "or a fully-qualified name, like 'tickets.eth'")
             if pieces[-1] != REGISTRAR_NAME:
-                raise TypeError("This registrar only manages names under .%s " % REGISTRAR_NAME)
+                raise ValueError("This interface only manages names under .%s " % REGISTRAR_NAME)
             label = pieces[-2]
         return label
+
+
+class InvalidBidHash(ValueError):
+    pass

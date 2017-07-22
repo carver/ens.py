@@ -4,3 +4,4 @@ web3utils
 __pycache__
 *.swp
 .cache
+*.egg-info
