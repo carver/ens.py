@@ -2,7 +2,7 @@
 import pytest
 from web3 import Web3
 
-from ens.registrar import BidTooLow
+from ens.registrar import BidTooLow, UnderfundedBid
 
 def test_bid_requires_from(registrar, name1, secret1):
     with pytest.raises(TypeError):
@@ -53,7 +53,8 @@ def test_new_bid(registrar, mocker, hashbytes1, value1, addr1):
             hashbytes1,
             transact={'from': addr1, 'gas': 500000, 'value': value1})
 
-# I'm hoping this is a bug in web3 that will be fixed eventually
+# shaBid ruturned this string
+# I'm hoping this is a bug in web3 that will be fixed at some point
 # I would expect a Solidity contract that returns bytes32 to return a python `bytes`
 def test_new_bid_web3_returning_string(registrar, mocker, hash1, value1, addr1):
     mocker.patch.object(
@@ -70,3 +71,11 @@ def test_min_bid(registrar, mocker, value1, addr1):
     with pytest.raises(BidTooLow):
         underbid = Web3.toWei('0.01', 'ether') - 1
         registrar.bid('', underbid, '', transact={'from': addr1})
+
+def test_underfunded_bid(registrar, mocker, value1, addr1):
+    mocker.patch.object(registrar.core, 'shaBid')
+    mocker.patch.object(registrar.core, 'newBid')
+    high_bid = value1 + 1
+    underfund = value1
+    with pytest.raises(UnderfundedBid):
+        registrar.bid('', high_bid, '', transact={'from': addr1, 'value': underfund})

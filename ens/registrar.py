@@ -91,6 +91,10 @@ class Registrar:
             self.__default_gas(transact, 'bid')
             if 'value' not in transact:
                 transact['value'] = amount
+            elif transact['value'] < amount:
+                raise UnderfundedBid("Bid of %s ETH was only funded with %s ETH" % (
+                                     Web3.fromWei(amount, 'ether'),
+                                     Web3.fromWei(transact['value'], 'ether')))
         # Enforce that sending account must be specified, to create the sealed bid
         sender = self.__require_sender(modifier_dict)
         if amount < MIN_BID:
@@ -197,8 +201,13 @@ class Registrar:
         return label
 
 
+class BidTooLow(ValueError):
+    pass
+
+
 class InvalidBidHash(ValueError):
     pass
 
-class BidTooLow(ValueError):
+
+class UnderfundedBid(ValueError):
     pass
