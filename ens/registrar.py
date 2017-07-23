@@ -87,7 +87,10 @@ class Registrar:
         if not modifier_dict:
             modifier_dict = {'transact': {}}
         if 'transact' in modifier_dict:
-            self.__default_gas(modifier_dict['transact'], 'bid')
+            transact = modifier_dict['transact']
+            self.__default_gas(transact, 'bid')
+            if 'value' not in transact:
+                transact['value'] = amount
         # Enforce that sending account must be specified, to create the sealed bid
         sender = self.__require_sender(modifier_dict)
         if amount < MIN_BID:
