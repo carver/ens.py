@@ -11,7 +11,7 @@ def test_bid_nameprep(registrar, mocker, fake_hash, fake_hash_utf8, value1, secr
     mocker.patch.object(registrar.web3, 'sha3', side_effect=fake_hash)
     mocker.patch.object(registrar.core, 'shaBid')
     mocker.patch.object(registrar.core, 'newBid')
-    registrar.bid( "Öbb.eth", value1, secret1, transact={'from': addr1})
+    registrar.bid("Öbb.eth", value1, secret1, transact={'from': addr1})
     registrar.core.shaBid.assert_called_once_with(
             fake_hash_utf8("öbb"),
             addr1,

@@ -1,6 +1,5 @@
 
 import pytest
-from web3 import Web3
 
 from ens.registrar import InvalidBidHash
 

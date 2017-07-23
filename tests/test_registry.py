@@ -1,9 +1,8 @@
 
-import pytest
-from unittest.mock import patch, MagicMock, Mock
+from unittest.mock import patch, MagicMock
 
 from web3utils import web3
-from web3utils.hex import EMPTY_SHA3, EMPTY_ADDR, EMPTY_SHA3_BYTES
+from web3utils.hex import EMPTY_SHA3_BYTES
 
 def test_namehash_three_labels(ens, mocker, fake_hash):
     mocker.patch.object(ens.web3, 'sha3', side_effect=fake_hash)
@@ -89,13 +88,13 @@ def test_reverse(ens, mocker, name1, addr1):
     assert ens.reverse('') == addr1
     ens.resolve.assert_called_once_with(name1, lookup='name')
 
-def test_owner_expand_name(ens, mocker):
+def test_owner_expand_name_with_namehash(ens, mocker):
     mocker.patch.object(ens, 'namehash')
     mocker.patch.object(ens.ens, 'owner')
     ens.owner('different')
-    ens.namehash.assert_called_once_with('different.eth')
+    ens.namehash.assert_called_once_with('different')
 
-def test_owner_expand_name(ens, mocker, hash1):
+def test_owner_passthrough_namehash_result(ens, mocker, hash1):
     mocker.patch.object(ens, 'namehash', return_value=hash1)
     mocker.patch.object(ens.ens, 'owner')
     ens.owner('')

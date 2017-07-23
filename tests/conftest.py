@@ -57,16 +57,9 @@ def secret1():
 @pytest.fixture
 def ens():
     web3 = REAL_WEB3
-    '''
-    provider = Mock()
-    provider.make_request.return_value = {'result': addr1}
-    web3.setProvider(provider)
-    '''
     web3.setProvider(EthereumTesterProvider())
-    web3 = Mock(wraps=web3)
-    ens_ = ENS(web3)
-    #ens_ = Mock(wraps=ens_)
-    return ens_
+    web3 = Mock(wraps=REAL_WEB3)
+    return ENS(web3)
 
 @pytest.fixture
 def registrar(ens, monkeypatch, addr9):
