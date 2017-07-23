@@ -94,7 +94,7 @@ class Registrar:
         # Enforce that sending account must be specified, to create the sealed bid
         sender = self.__require_sender(modifier_dict)
         if amount < MIN_BID:
-            raise ValueError("You must bid at least 0.01 ether")
+            raise BidTooLow("You must bid at least %s ether" % Web3.fromWei(MIN_BID, 'ether'))
         label = self._to_label(label)
         bid_hash = self._bid_hash(label, sender, amount, secret)
         return self.core.newBid(bid_hash, **modifier_dict)
@@ -198,4 +198,7 @@ class Registrar:
 
 
 class InvalidBidHash(ValueError):
+    pass
+
+class BidTooLow(ValueError):
     pass

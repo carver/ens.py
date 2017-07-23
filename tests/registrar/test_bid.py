@@ -2,6 +2,7 @@
 import pytest
 from web3 import Web3
 
+from ens.registrar import BidTooLow
 
 def test_bid_requires_from(registrar, name1, secret1):
     with pytest.raises(TypeError):
@@ -66,6 +67,6 @@ def test_new_bid_web3_returning_string(registrar, mocker, hash1, value1, addr1):
             transact={'from': addr1, 'gas': 500000, 'value': value1})
 
 def test_min_bid(registrar, mocker, value1, addr1):
-    with pytest.raises(ValueError):
+    with pytest.raises(BidTooLow):
         underbid = Web3.toWei('0.01', 'ether') - 1
         registrar.bid('', underbid, '', transact={'from': addr1})
