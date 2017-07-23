@@ -5,6 +5,12 @@ from web3utils.hex import EMPTY_ADDR
 
 from ens.registrar import Status
 
+def test_status_passthrough(registrar, mocker, hash1, label1):
+    status = object()
+    mocker.patch.object(registrar, 'entries', return_value=[status, None, 0, 0, 0])
+    assert registrar.status(label1) is status
+    registrar.entries.assert_called_once_with(label1)
+
 def test_entries_passthrough(registrar, mocker, hash1, label1):
     result = object()
     mocker.patch.object(registrar, 'entries_by_hash', return_value=result)

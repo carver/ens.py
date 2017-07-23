@@ -53,6 +53,9 @@ class Registrar:
         self._core = None
         self._deedContract = ens._contract(abi=abis.DEED)
 
+    def status(self, label):
+        return self.entries(label)[0]
+
     def entries(self, label):
         label = self._to_label(label)
         label_hash = self.ens.labelhash(label)
