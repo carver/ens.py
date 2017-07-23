@@ -21,6 +21,7 @@ START_GAS_CONSTANT = 25000
 START_GAS_MARGINAL = 39000
 
 MIN_BID = Web3.toWei('0.01', 'ether')
+MIN_NAME_LENGTH = 7
 
 
 class Status(IntEnum):
@@ -52,6 +53,7 @@ class Registrar:
         # delay generating this contract so that this class can be created before web3 is online
         self._core = None
         self._deedContract = ens._contract(abi=abis.DEED)
+        self._short_invalid = True
 
     def status(self, label):
         return self.entries(label)[0]
@@ -95,11 +97,10 @@ class Registrar:
                 raise UnderfundedBid("Bid of %s ETH was only funded with %s ETH" % (
                                      Web3.fromWei(amount, 'ether'),
                                      Web3.fromWei(transact['value'], 'ether')))
-        # Enforce that sending account must be specified, to create the sealed bid
+        label = self._to_label(label)
         sender = self.__require_sender(modifier_dict)
         if amount < MIN_BID:
             raise BidTooLow("You must bid at least %s ether" % Web3.fromWei(MIN_BID, 'ether'))
-        label = self._to_label(label)
         bid_hash = self._bid_hash(label, sender, amount, secret)
         return self.core.newBid(bid_hash, **modifier_dict)
 
@@ -198,6 +199,8 @@ class Registrar:
             if pieces[-1] != REGISTRAR_NAME:
                 raise ValueError("This interface only manages names under .%s " % REGISTRAR_NAME)
             label = pieces[-2]
+        if self._short_invalid and len(label) < MIN_NAME_LENGTH:
+            raise InvalidLabel('name %r is too shart' % label)
         return label
 
 
@@ -206,6 +209,10 @@ class BidTooLow(ValueError):
 
 
 class InvalidBidHash(ValueError):
+    pass
+
+
+class InvalidLabel(ValueError):
     pass
 
 

@@ -53,7 +53,7 @@ def label1():
 
 @pytest.fixture
 def label2():
-    return 'dennis'
+    return 'dennisthe'
 
 @pytest.fixture
 def value1():

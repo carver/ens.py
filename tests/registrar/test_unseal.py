@@ -19,23 +19,23 @@ def test_reveal_requires_from(unseal_registrar, label1, value1, secret1):
     with pytest.raises(TypeError):
         unseal_registrar.reveal(label1, value1, secret1)
 
-def test_reveal_searches_for_sealed_bid(unseal_registrar, mocker, hashbytes9, value1, addr1):
-    unseal_registrar.reveal('', value1, '', transact={'from': addr1})
+def test_reveal_searches_for_sealed_bid(unseal_registrar, mocker, label1, hashbytes9, value1, addr1):
+    unseal_registrar.reveal(label1, value1, '', transact={'from': addr1})
     unseal_registrar.core.sealedBids.assert_called_once_with(addr1, hashbytes9)
 
-def test_reveal_fails_on_seal_mismatch(unseal_registrar, mocker, value1, addr1):
+def test_reveal_fails_on_seal_mismatch(unseal_registrar, mocker, label1, value1, addr1):
     mocker.patch.object(unseal_registrar.core, 'sealedBids', return_value=None)
     with pytest.raises(InvalidBidHash):
-        unseal_registrar.reveal('', value1, '', transact={'from': addr1})
+        unseal_registrar.reveal(label1, value1, '', transact={'from': addr1})
 
 def test_reveal_nameprep(unseal_registrar, mocker, fake_hash, value1, secret1, addr1):
     '''
     Must convert unicode letters to lowercase, and convert from full name to label
     '''
     mocker.patch.object(unseal_registrar.web3, 'sha3', side_effect=fake_hash)
-    unseal_registrar.reveal("Öbb.eth", value1, secret1, transact={'from': addr1})
+    unseal_registrar.reveal("ÖÖÖÖÖÖÖ.eth", value1, secret1, transact={'from': addr1})
     unseal_registrar.core.shaBid.assert_called_once_with(
-            fake_hash("öbb", encoding='bytes'),
+            fake_hash("ööööööö", encoding='bytes'),
             addr1,
             value1,
             fake_hash(secret1, encoding='bytes'),

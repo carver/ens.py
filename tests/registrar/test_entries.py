@@ -22,14 +22,14 @@ def test_entries_passthrough(registrar, mocker, hash1, label1):
 def test_entries_use_label(registrar, mocker, addr1, hash1):
     mocker.patch.object(registrar.ens, 'labelhash')
     mocker.patch.object(registrar, 'entries_by_hash')
-    registrar.entries('grail.eth')
-    registrar.ens.labelhash.assert_called_once_with('grail')
+    registrar.entries('holygrail.eth')
+    registrar.ens.labelhash.assert_called_once_with('holygrail')
 
 def test_entries_subdomain_meaningless(registrar, mocker, addr1, hash1):
     mocker.patch.object(registrar.web3, 'sha3')
     mocker.patch.object(registrar, 'entries_by_hash')
     with pytest.raises(ValueError):
-        registrar.entries('holy.grail.eth')
+        registrar.entries('montypythonandthe.holygrail.eth')
 
 def test_entries_status(registrar, mocker):
     NUM_ENTRIES_STATUSES = 6
