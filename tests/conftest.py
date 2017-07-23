@@ -2,6 +2,7 @@
 import pytest
 from unittest.mock import Mock
 
+from web3 import Web3
 from web3.providers.tester import EthereumTesterProvider
 from web3utils import web3 as REAL_WEB3
 
@@ -23,8 +24,8 @@ def addr9():
     return mkhash(9)
 
 @pytest.fixture
-def addrbytes1():
-    return b'\x11' * 20
+def addrbytes1(addr1):
+    return Web3.toAscii(addr1)
 
 @pytest.fixture
 def hash1():
@@ -33,6 +34,14 @@ def hash1():
 @pytest.fixture
 def hash9():
     return mkhash(9, digits=64)
+
+@pytest.fixture
+def hashbytes1(hash1):
+    return Web3.toAscii(hash1)
+
+@pytest.fixture
+def hashbytes9(hash9):
+    return Web3.toAscii(hash9)
 
 @pytest.fixture
 def name1():

@@ -44,11 +44,26 @@ def test_bid_convert_to_label(registrar, mocker, fake_hash, fake_hash_utf8, hash
             fake_hash_utf8(secret1),
             )
 
-def test_new_bid(registrar, mocker, hash1, value1, addr1):
-    mocker.patch.object(registrar.core, 'shaBid', return_value=hash1)
+def test_new_bid(registrar, mocker, hashbytes1, value1, addr1):
+    mocker.patch.object(registrar.core, 'shaBid', return_value=hashbytes1)
     mocker.patch.object(registrar.core, 'newBid')
     registrar.bid('', value1, '', transact={'from': addr1})
-    registrar.core.newBid.assert_called_once_with(hash1, transact={'from': addr1, 'gas': 500000})
+    registrar.core.newBid.assert_called_once_with(
+            hashbytes1,
+            transact={'from': addr1, 'gas': 500000})
+
+# I'm hoping this is a bug in web3 that will be fixed eventually
+# I would expect a Solidity contract that returns bytes32 to return a python `bytes`
+def test_new_bid_web3_returning_string(registrar, mocker, hash1, value1, addr1):
+    mocker.patch.object(
+            registrar.core,
+            'shaBid',
+            return_value='+jZuWõt/è6*á\rGqK\x9b\x88C*\x14B¸Ün\x18\x14\t´\x11Ýå')
+    mocker.patch.object(registrar.core, 'newBid')
+    registrar.bid('', value1, '', transact={'from': addr1})
+    registrar.core.newBid.assert_called_once_with(
+            b'+jZuW\xf5t/\xe86*\xe1\rGqK\x9b\x88C*\x14B\xb8\xdcn\x18\x14\t\xb4\x11\xdd\xe5',
+            transact={'from': addr1, 'gas': 500000})
 
 def test_min_bid(registrar, mocker, value1, addr1):
     with pytest.raises(ValueError):

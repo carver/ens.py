@@ -5,8 +5,8 @@ from ens.registrar import InvalidBidHash
 
 
 @pytest.fixture
-def unseal_registrar(registrar, mocker, hash9, addr9):
-    mocker.patch.object(registrar.core, 'shaBid', return_value=hash9)
+def unseal_registrar(registrar, mocker, hashbytes9, addr9):
+    mocker.patch.object(registrar.core, 'shaBid', return_value=hashbytes9)
     mocker.patch.object(registrar.core, 'sealedBids', return_value=addr9)
     mocker.patch.object(registrar.core, 'unsealBid')
     return registrar
@@ -19,9 +19,9 @@ def test_reveal_requires_from(unseal_registrar, label1, value1, secret1):
     with pytest.raises(TypeError):
         unseal_registrar.reveal(label1, value1, secret1)
 
-def test_reveal_searches_for_sealed_bid(unseal_registrar, mocker, hash9, value1, addr1):
+def test_reveal_searches_for_sealed_bid(unseal_registrar, mocker, hashbytes9, value1, addr1):
     unseal_registrar.reveal('', value1, '', transact={'from': addr1})
-    unseal_registrar.core.sealedBids.assert_called_once_with(addr1, hash9)
+    unseal_registrar.core.sealedBids.assert_called_once_with(addr1, hashbytes9)
 
 def test_reveal_fails_on_seal_mismatch(unseal_registrar, mocker, value1, addr1):
     mocker.patch.object(unseal_registrar.core, 'sealedBids', return_value=None)

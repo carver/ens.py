@@ -167,7 +167,12 @@ class Registrar:
     def _bid_hash(self, label, bidder, bid_amount, secret):
         label_hash = self.ens.labelhash(label)
         secret_hash = self.web3.sha3(secret, encoding='bytes')
-        return self.core.shaBid(label_hash, bidder, bid_amount, secret_hash)
+        bid_hash = self.core.shaBid(label_hash, bidder, bid_amount, secret_hash)
+        # deal with web3.py returning a string instead of bytes:
+        if isinstance(bid_hash, str):
+            bid_hash = Web3.toHex(bid_hash)
+            bid_hash = Web3.toAscii(bid_hash)
+        return bid_hash
 
     def _to_label(self, label_or_name):
         '''
