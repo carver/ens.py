@@ -174,5 +174,5 @@ This might even be common for anything other than personal addresses.
 
 *Why does ens require python 3?*
 
-Because [web3utils requires python 3](). Plus, Ethereum is brand new. You shouldn't have any legacy
+Because [web3utils requires python 3](https://github.com/carver/web3utils.py#why-is-python-3-required). Plus, Ethereum is brand new. You shouldn't have any legacy
 code that requires you to use a ~10-year-old python version.

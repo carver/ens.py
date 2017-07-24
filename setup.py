@@ -5,7 +5,7 @@ https://packaging.python.org/en/latest/distributing.html
 https://github.com/pypa/sampleproject
 """
 
-from setuptools import setup
+from setuptools import setup, find_packages
 from io import open
 from os import path
 
@@ -16,18 +16,18 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='ethereum-name-service',
+    name='ens',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
     version='0.0.1',
 
-    description='Ethereum Name Service, made easy',
+    description='Ethereum Name Service, made easy in Python',
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/carver/ethereum-name-service.py',
+    url='https://github.com/carver/ens.py',
 
     # Author details
     author='Jason Carver',
@@ -53,15 +53,13 @@ setup(
     ],
 
     # What does your project relate to?
-    keywords='ethereum eth web3 web3.py ENS',
+    keywords='ethereum eth web3 web3.py ENS web3utils',
+
+    python_requires='>=3.5',
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    # packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-
-    # Alternatively, if you want to distribute just a my_module.py, uncomment
-    # this:
-    py_modules=['ens'],
+    packages=find_packages(exclude=['tests', 'venv']),
 
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=['web3utils<1', 'pytz'],
