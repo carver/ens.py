@@ -62,5 +62,5 @@ setup(
     packages=find_packages(exclude=['tests', 'venv']),
 
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['web3utils<1', 'pytz'],
+    install_requires=['pytz', 'web3utils<1'],
 )
