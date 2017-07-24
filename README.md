@@ -23,6 +23,27 @@ Currently, several of the convenience methods only split on '.' and not other si
 characters, as defined in ut-46.
 
 
+### Setup
+
+`pip install ens`
+
+*ens.py* requires an up-to-date Ethereum blockchain, preferably local. If your setup isn't working,
+try running `geth --fast` until it's fully-synced. I highly recommend using the default IPC
+communication method, for speed and security.
+
+#### Optionally, a custom web3 provider
+
+```
+from ens import ENS
+from web3utils import web3
+from web3.providers import IPCProvider 
+
+web3.setProvider(IPCProvider('/your/custom/ipc/path'))
+
+ens = ENS(web3)
+```
+
+
 ### Look up information
 
 Look up a name, defaulting to .eth:
@@ -34,6 +55,8 @@ from ens import ens
 # look up the hex representation of the address for a name
 
 eth_address = ens.resolve('jasoncarver.eth')
+
+assert eth_address == '0x5b2063246f2191f18f2675cedb8b28102e957458'
 
 
 # ens.py will assume you want a .eth name if you don't specify a full name
@@ -57,6 +80,7 @@ assert ens.reverse(b'\xfd\xb3?\x8a\xc7\xcer\xd7\xd4y]\xd8a\x0e2;L\x12/\xbb') == 
 
 assert ens.resolve(domain) == '0xfdb33f8ac7ce72d7d4795dd8610e323b4c122fbb'
 ```
+
 
 
 Find the owner of a name:
