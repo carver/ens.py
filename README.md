@@ -19,8 +19,8 @@ The [nameprep algorithm](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1
 is not well tested, please be cautious and double-check the result through another channel. If you
 supply the name in `bytes`, it will be assumed to be UTF-8 encoded, like in
 [Ethereum contracts](https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI#argument-encoding).
-Currently, several of the convenience methods only split on '.' and not other similar dot
-characters, as defined in ut-46.
+Currently, several of the convenience methods only split on '.'. Instead, UT-46 says that several
+other dot characters should be split, too.
 
 
 ### Setup
@@ -36,7 +36,7 @@ communication method, for speed and security.
 ```
 from ens import ENS
 from web3utils import web3
-from web3.providers import IPCProvider 
+from web3 import IPCProvider 
 
 web3.setProvider(IPCProvider('/your/custom/ipc/path'))
 
