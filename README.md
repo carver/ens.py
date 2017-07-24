@@ -109,10 +109,10 @@ assert ens.registrar.status('payment.eth') == status
 
 assert status in (
   Status.Open,
-  Status.Auction,
+  Status.Auctioning,
   Status.Owned,
   Status.Forbidden,
-  Status.Reveal,
+  Status.Revealing,
   Status.NotYetAvailable
   )
 

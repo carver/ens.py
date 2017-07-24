@@ -28,12 +28,14 @@ class Status(IntEnum):
     '''
     Current status of the auction for a label. For more info:
     http://docs.ens.domains/en/latest/userguide.html#starting-an-auction
+
+    Names taken from Solidity contract, but modified so they are gramatically parallel
     '''
     Open = 0
-    Auction = 1
+    Auctioning = 1        # original name was 'Auction' in HashRegistrarSimplified contract
     Owned = 2
     Forbidden = 3
-    Reveal = 4
+    Revealing = 4         # original name was 'Reveal' in HashRegistrarSimplified contract
     NotYetAvailable = 5
 
 
