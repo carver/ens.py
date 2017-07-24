@@ -1,6 +1,8 @@
 
 ## Ethereum Name Service via Python
 
+[![Join the chat at https://gitter.im/ens-py/Lobby](https://badges.gitter.im/ens-py/Lobby.svg)](https://gitter.im/ens-py/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Access the Ethereum Name Service using this python library. Note: **this is a work in progress**
 
 Using this library is not a way to skip learning how ENS works. A small misunderstanding can cause
