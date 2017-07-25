@@ -59,7 +59,7 @@ def test_resolver_empty(ens):
     with patch.object(ens.ens, 'resolver', return_value=None):
         assert ens.resolver('') is None
 
-def test_resolve(ens, mocker, hash1, addr1):
+def test_address(ens, mocker, hash1, addr1):
     '''
     Using namehash is required, to expand from label to full name
     '''
@@ -67,7 +67,7 @@ def test_resolve(ens, mocker, hash1, addr1):
     resolver = MagicMock()
     resolver.addr.return_value = addr1
     mocker.patch.object(ens, 'resolver', return_value=resolver)
-    assert ens.resolve('eth') == addr1
+    assert ens.address('eth') == addr1
     ens.namehash.assert_called_once_with('eth')
     resolver.addr.assert_called_once_with(hash1)
 
@@ -86,7 +86,7 @@ def test_reverse(ens, mocker, name1, addr1):
     mocker.patch.object(ens, 'reverse_domain', return_value=name1)
     mocker.patch.object(ens, 'resolve', return_value=addr1)
     assert ens.reverse('') == addr1
-    ens.resolve.assert_called_once_with(name1, lookup='name')
+    ens.resolve.assert_called_once_with(name1, get='name')
 
 def test_owner_expand_name_with_namehash(ens, mocker):
     mocker.patch.object(ens, 'namehash')

@@ -49,14 +49,14 @@ from ens import ens
 
 # look up the hex representation of the address for a name
 
-eth_address = ens.lookup('jasoncarver.eth')
+eth_address = ens.address('jasoncarver.eth')
 
 assert eth_address == '0x5b2063246f2191f18f2675cedb8b28102e957458'
 
 
 # ens.py will assume you want a .eth name if you don't specify a full name
 
-assert ens.lookup('jasoncarver') == eth_address
+assert ens.address('jasoncarver') == eth_address
 ```
 
 #### Get name from address
@@ -72,7 +72,7 @@ assert ens.reverse(b'[ c$o!\x91\xf1\x8f&u\xce\xdb\x8b(\x10.\x95tX') == domain
 
 # confirm that the name resolves back to the address that you looked up:
 
-assert ens.lookup(domain) == '0x5b2063246f2191f18f2675cedb8b28102e957458'
+assert ens.address(domain) == '0x5b2063246f2191f18f2675cedb8b28102e957458'
 ```
 
 #### Get owner of name
