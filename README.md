@@ -27,12 +27,11 @@ other dot characters should be split, too.
 
 ## Setup
 
-With Python 3:
-
 ```
 pip install ens
 ```
 
+Any issues? See [Setup details](#setup-details)
 
 ## Usage
 
