@@ -29,18 +29,21 @@ class ENS:
         self._resolverContract = self._contract(abi=abis.RESOLVER)
         self.registrar = Registrar(self)
 
-    def address(self, name, get='addr'):
+    def address(self, name):
+        return self.resolve(name, 'addr')
+
+    def name(self, address):
+        reversed_domain = self.reverse_domain(address)
+        return self.resolve(reversed_domain, get='name')
+    reverse = name
+
+    def resolve(self, name, get='addr'):
         resolver = self.resolver(name)
         if resolver:
             lookup_function = getattr(resolver, get)
             return lookup_function(self.namehash(name))
         else:
             return None
-    resolve = address
-
-    def reverse(self, address):
-        reversed_domain = self.reverse_domain(address)
-        return self.resolve(reversed_domain, get='name')
 
     def namehash(self, name):
         name = self._full_name(name)

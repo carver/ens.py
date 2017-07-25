@@ -48,6 +48,10 @@ def name1():
     return 'dennis.the.peasant'
 
 @pytest.fixture
+def name2():
+    return 'i.didnt.vote.for.you.eth'
+
+@pytest.fixture
 def label1():
     return 'peasant'
 
