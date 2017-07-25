@@ -18,56 +18,19 @@ being at risk include: sending ether/tokens to resolved addresses and participat
 auctions.
 
 The [nameprep algorithm](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-137.md#name-syntax)
-is not well tested, please be cautious and double-check the result through another channel. If you
-supply the name in `bytes`, it will be assumed to be UTF-8 encoded, like in
+implementation is not well tested, please be cautious and double-check the result through another
+channel. If you supply the name in `bytes`, it will be assumed to be UTF-8 encoded, like in
 [Ethereum contracts](https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI#argument-encoding).
-Currently, several of the convenience methods only split on '.'. Instead, UT-46 says that several
+Currently, several of the convenience methods only split on '.' -- instead, UT-46 says that several
 other dot characters should be split, too.
 
 
 ## Setup
 
-### If Python 2 is your default, or you're not sure
-
-In your shell
-```
-if pip --version | grep "python 2"; then
-  python3 -m venv ~/.py3venv
-  source ~/.py3venv/bin/activate
-fi
-```
-
-### Now, with Python 3
-
-In your shell: `pip install ens`
-
-*ens.py* requires an up-to-date Ethereum blockchain, preferably local. If your setup isn't working,
-try running `geth --fast` until it's fully-synced. I highly recommend using the default IPC
-communication method, for speed and security.
-
-### "No matching distribution found for ens"
-
-If you are seeing something like:
-```
-Collecting ens
-  Could not find a version that satisfies the requirement ens (from versions: )
-No matching distribution found for ens
-```
-
-Then retry the first Setup section, to make sure you're in Python 3
-
-### Optionally, a custom web3 provider
-
-In Python:
+With Python 3:
 
 ```
-from ens import ENS
-from web3utils import web3
-from web3 import IPCProvider 
-
-web3.setProvider(IPCProvider('/your/custom/ipc/path'))
-
-ens = ENS(web3)
+pip install ens
 ```
 
 
@@ -244,6 +207,52 @@ assert web3.fromWei(entries[3], 'ether') == Decimal('0.01')
 
 assert web3.fromWei(entries[4], 'ether') == Decimal('201709.02')
 ```
+
+## Setup details
+
+### If Python 2 is your default, or you're not sure
+
+In your shell
+```
+if pip --version | grep "python 2"; then
+  python3 -m venv ~/.py3venv
+  source ~/.py3venv/bin/activate
+fi
+```
+
+### Now, with Python 3
+
+In your shell: `pip install ens`
+
+*ens.py* requires an up-to-date Ethereum blockchain, preferably local. If your setup isn't working,
+try running `geth --fast` until it's fully-synced. I highly recommend using the default IPC
+communication method, for speed and security.
+
+### "No matching distribution found for ens"
+
+If you are seeing something like:
+```
+Collecting ens
+  Could not find a version that satisfies the requirement ens (from versions: )
+No matching distribution found for ens
+```
+
+Then retry the first Setup section, to make sure you're in Python 3
+
+### Optionally, a custom web3 provider
+
+In Python:
+
+```
+from ens import ENS
+from web3utils import web3
+from web3 import IPCProvider 
+
+web3.setProvider(IPCProvider('/your/custom/ipc/path'))
+
+ens = ENS(web3)
+```
+
 
 
 ## Developer Setup
