@@ -5,12 +5,6 @@ from web3utils.hex import EMPTY_ADDR
 
 from ens.registrar import Status
 
-def test_status_passthrough(registrar, mocker, hash1, label1):
-    status = object()
-    mocker.patch.object(registrar, 'entries', return_value=[status, None, 0, 0, 0])
-    assert registrar.status(label1) is status
-    registrar.entries.assert_called_once_with(label1)
-
 def test_entries_passthrough(registrar, mocker, hash1, label1):
     result = object()
     mocker.patch.object(registrar, 'entries_by_hash', return_value=result)
@@ -63,4 +57,28 @@ def test_entries_registration_empty(registrar, mocker):
 def test_entries_value_passthrough(registrar, mocker):
     mocker.patch.object(registrar.core, 'entries', return_value=[0, EMPTY_ADDR, 0, 1, 2])
     entries = registrar.entries_by_hash(b'')
-    assert entries[-2:] == [1, 2]
+    assert entries[-2:] == (1, 2)
+
+def test_entries_named_access(registrar, mocker, addr1):
+    mocker.patch.object(registrar.core, 'entries', return_value=[0, addr1, 2, 3, 4])
+    entries = registrar.entries_by_hash(b'')
+    assert entries[0] is entries.status
+    assert entries[1] is entries.deed
+    assert entries[2] is entries.close_at
+    assert entries[3] is entries.deposit
+    assert entries[4] is entries.top_bid
+
+@pytest.mark.parametrize(
+        'entry_attr',
+        ['status', 'close_at', 'deposit', 'top_bid']
+        )
+def test_entries_method_access(registrar, mocker, entry_attr):
+    mocker.patch.object(registrar.core, 'entries', return_value=[0, EMPTY_ADDR, 2, 3, 4])
+    mocker.patch.object(registrar, 'entries_by_hash', wraps=registrar.entries_by_hash)
+    entries = registrar.entries_by_hash(b'')
+    lookup = getattr(registrar, entry_attr)
+
+def test_entries_method_access_for_deed(registrar, mocker, addr1):
+    mocker.patch.object(registrar.core, 'entries', return_value=[0, addr1, 2, 3, 4])
+    entries = registrar.entries_by_hash(b'')
+    assert entries.deed._web3py_contract.address == addr1

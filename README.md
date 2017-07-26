@@ -172,39 +172,40 @@ ens.registrar.finalize('gambling')
 
 #### Get detailed information on an auction
 
-aka "entries" for an auction
-
-```
-entries = ens.registrar.entries('ethfinex')
-
-
-# confirm the auction is closed
-
-assert entries[0] == Status.Owned
-
-
-# find out the owner of the auction Deed --
+Find out the owner of the auction Deed --
 see [docs on the difference](http://docs.ens.domains/en/latest/userguide.html#managing-ownership)
 between owning the name and the deed
 
-assert entries[1].owner() == '0x9a02ed4ca9ad55b75ff9a05debb36d5eb382e184'
+```
+deed = ens.registrar.deed('ethfinex')
 
+assert deed.owner() == '0x9a02ed4ca9ad55b75ff9a05debb36d5eb382e184'
+```
 
-# when was the auction completed? (a timezone-aware datetime object)
+When was the auction completed? (a timezone-aware datetime object)
 
-assert str(entries[2]) == '2017-06-05 08:10:03+00:00'
+```
+close_datetime = ens.registrar.close_at('ethfinex')
 
+assert str(close_datetime) == '2017-06-05 08:10:03+00:00'
+```
 
-# how much is held on deposit?
+How much is held on deposit?
 
+```
 from decimal import Decimal
 
-assert web3.fromWei(entries[3], 'ether') == Decimal('0.01')
+deposit = ens.registrar.deposit('ethfinex')
 
+assert web3.fromWei(deposit, 'ether') == Decimal('0.01')
+```
 
-# what was the highest bid?
+What was the highest bid?
 
-assert web3.fromWei(entries[4], 'ether') == Decimal('201709.02')
+```
+top_bid = ens.registrar.top_bid('ethfinex')
+
+assert web3.fromWei(top_bid, 'ether') == Decimal('201709.02')
 ```
 
 ## Setup details

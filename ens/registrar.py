@@ -1,4 +1,5 @@
 
+from collections import namedtuple
 from datetime import datetime
 from enum import IntEnum
 
@@ -23,6 +24,7 @@ START_GAS_MARGINAL = 39000
 MIN_BID = Web3.toWei('0.01', 'ether')
 MIN_NAME_LENGTH = 7
 
+AuctionEntries = namedtuple('AuctionEntries', 'status, deed, close_at, deposit, top_bid')
 
 class Status(IntEnum):
     '''
@@ -56,9 +58,6 @@ class Registrar:
         self._core = None
         self._deedContract = ens._contract(abi=abis.DEED)
         self._short_invalid = True
-
-    def status(self, label):
-        return self.entries(label)[0]
 
     def entries(self, label):
         label = self._to_label(label)
@@ -143,13 +142,13 @@ class Registrar:
         '''
         assert isinstance(label_hash, (bytes, bytearray))
         entries = self.core.entries(label_hash)
-        entries[0] = Status(entries[0])
-        entries[1] = None if is_empty_hex(entries[1]) else self._deedContract(entries[1])
-        close_date = None
-        if entries[2]:
-            close_date = datetime.fromtimestamp(entries[2], pytz.utc)
-        entries[2] = close_date
-        return entries
+        return AuctionEntries(
+            Status(entries[0]),
+            self._deedContract(entries[1]) if not is_empty_hex(entries[1]) else None,
+            datetime.fromtimestamp(entries[2], pytz.utc) if entries[2] else None,
+            entries[3],
+            entries[4],
+            )
 
     @property
     def core(self):
@@ -204,6 +203,16 @@ class Registrar:
         if self._short_invalid and len(label) < MIN_NAME_LENGTH:
             raise InvalidLabel('name %r is too shart' % label)
         return label
+
+    def __entry_lookup(self, label, entry_attr):
+        entries = self.entries(label)
+        return getattr(entries, entry_attr)
+
+    def __getattr__(self, attr):
+        if attr in AuctionEntries._fields:
+            return lambda label: self.__entry_lookup(label, attr)
+        else:
+            raise AttributeError
 
 
 class BidTooLow(ValueError):
