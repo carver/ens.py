@@ -26,6 +26,7 @@ MIN_NAME_LENGTH = 7
 
 AuctionEntries = namedtuple('AuctionEntries', 'status, deed, close_at, deposit, top_bid')
 
+
 class Status(IntEnum):
     '''
     Current status of the auction for a label. For more info:

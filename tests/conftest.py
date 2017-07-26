@@ -45,7 +45,7 @@ def hashbytes9(hash9):
 
 @pytest.fixture
 def name1():
-    return 'dennis.the.peasant'
+    return 'dennis.the.peasant.eth'
 
 @pytest.fixture
 def name2():

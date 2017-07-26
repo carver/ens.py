@@ -1,7 +1,7 @@
 
 import idna
 from web3utils import web3, STRING_ENCODING
-from web3utils.hex import EMPTY_SHA3_BYTES
+from web3utils.hex import EMPTY_SHA3_BYTES, hex2bytes
 
 from ens import abis
 from ens.registrar import Registrar
@@ -13,8 +13,18 @@ ENS_MAINNET_ADDR = '0x314159265dd8dbb310642f98f50c066173c1259b'
 
 REVERSE_REGISTRAR_DOMAIN = '.addr.reverse'
 
+GAS_DEFAULT = {
+    'setAddr': 60001,
+    'setResolver': 60002,
+    'setSubnodeOwner': 60003,
+    }
+
 
 class ENS:
+    '''
+    Unless otherwise specified, all addresses are assumed to be a str in hex format, like:
+    "0x314159265dd8dbb310642f98f50c066173c1259b"
+    '''
 
     def __init__(self, custom_web3=None, addr=None):
         '''
@@ -36,6 +46,20 @@ class ENS:
         reversed_domain = self.reverse_domain(address)
         return self.resolve(reversed_domain, get='name')
     reverse = name
+
+    def setup_address(self, name, address, transact={}):
+        if self.address(name) == web3.toHex(address):
+            return None
+        (owner, unowned, owned) = self._first_owner(name)
+        if owner not in self.web3.eth.accounts:
+            raise UnauthorizedError("in order to modify %r, you must control account %r" % (
+                                    name, owner))
+        if unowned:
+            self._claim_ownership(owner, unowned, owned, transact=transact)
+        transact['from'] = owner
+        resolver = self._set_resolver(name, transact=transact)
+        transact['gas'] = GAS_DEFAULT['setAddr']
+        return resolver.setAddr(self.namehash(name), hex2bytes(address), transact=transact)
 
     def resolve(self, name, get='addr'):
         resolver = self.resolver(name)
@@ -77,6 +101,14 @@ class ENS:
         label_bytes = prepped.encode(STRING_ENCODING)
         return self.web3.sha3(label_bytes)
 
+    def reverse_domain(self, address):
+        if isinstance(address, (bytes, bytearray)):
+            address = self.web3.toHex(address)
+        if address.startswith('0x'):
+            address = address[2:]
+        address = address.lower()
+        return address + REVERSE_REGISTRAR_DOMAIN
+
     @staticmethod
     def nameprep(name):
         if not name:
@@ -87,6 +119,43 @@ class ENS:
         domain = self.reverse_domain(address)
         return self.namehash(domain)
 
+    def _first_owner(self, name):
+        '@returns (owner or None, list(unowned_subdomain_labels), first_owned_domain)'
+        owner = None
+        unowned = []
+        pieces = self._full_name(name).split('.')
+        while not owner and pieces:
+            name = '.'.join(pieces)
+            owner = self.owner(name)
+            if not owner:
+                unowned.append(pieces.pop(0))
+        return (owner, unowned, name)
+
+    def _claim_ownership(self, owner, unowned, owned, transact={}):
+        transact['from'] = owner
+        transact['gas'] = GAS_DEFAULT['setSubnodeOwner']
+        for label in reversed(unowned):
+            self.ens.setSubnodeOwner(
+                    self.namehash(owned),
+                    self.labelhash(label),
+                    owner,
+                    transact=transact
+                    )
+            owned = "%s.%s" % (label, owned)
+
+    def _set_resolver(self, name, resolver_addr=None, transact={}):
+        if not resolver_addr:
+            resolver_addr = self.address('resolver.eth')
+        namehash = self.namehash(name)
+        if self.ens.resolver(namehash) != resolver_addr:
+            transact['gas'] = GAS_DEFAULT['setResolver']
+            self.ens.setResolver(
+                    namehash,
+                    hex2bytes(resolver_addr),
+                    transact=transact
+                    )
+        return self._resolverContract(address=resolver_addr)
+
     @staticmethod
     def _full_name(name):
         if isinstance(name, (bytes, bytearray)):
@@ -96,10 +165,6 @@ class ENS:
             pieces.append(DEFAULT_TLD)
         return '.'.join(pieces)
 
-    def reverse_domain(self, address):
-        if isinstance(address, (bytes, bytearray)):
-            address = self.web3.toHex(address)
-        if address.startswith('0x'):
-            address = address[2:]
-        address = address.lower()
-        return address + REVERSE_REGISTRAR_DOMAIN
+
+class UnauthorizedError(Exception):
+    pass
