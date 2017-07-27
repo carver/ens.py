@@ -4,6 +4,7 @@ from web3utils import web3, STRING_ENCODING
 from web3utils.hex import EMPTY_SHA3_BYTES, hex2bytes
 
 from ens import abis
+from ens.utils import dict_copy
 from ens.registrar import Registrar
 
 DEFAULT_TLD = 'eth'
@@ -11,7 +12,7 @@ RECOGNIZED_TLDS = [DEFAULT_TLD, 'reverse']
 
 ENS_MAINNET_ADDR = '0x314159265dd8dbb310642f98f50c066173c1259b'
 
-REVERSE_REGISTRAR_DOMAIN = '.addr.reverse'
+REVERSE_REGISTRAR_DOMAIN = 'addr.reverse'
 
 GAS_DEFAULT = {
     'setAddr': 60001,
@@ -47,19 +48,35 @@ class ENS:
         return self.resolve(reversed_domain, get='name')
     reverse = name
 
+    @dict_copy
     def setup_address(self, name, address, transact={}):
         if self.address(name) == web3.toHex(address):
             return None
         (owner, unowned, owned) = self._first_owner(name)
-        if owner not in self.web3.eth.accounts:
-            raise UnauthorizedError("in order to modify %r, you must control account %r" % (
-                                    name, owner))
+        self._assert_control(owner, name)
         if unowned:
             self._claim_ownership(owner, unowned, owned, transact=transact)
         transact['from'] = owner
         resolver = self._set_resolver(name, transact=transact)
         transact['gas'] = GAS_DEFAULT['setAddr']
         return resolver.setAddr(self.namehash(name), hex2bytes(address), transact=transact)
+
+    @dict_copy
+    def setup_name(self, name, address=None, transact={}):
+        resolved = self.address(name)
+        if not address:
+            address = resolved
+        elif resolved and address != resolved:
+            raise AddressMismatch(
+                    "To change the name for an existing address, call setup_address() first")
+        if not address:
+            address = self.owner(name)
+        if not address:
+            raise UnownedName("claim subdomain using setup_address() first")
+        self._assert_control(address, name)
+        if not resolved:
+            self.setup_address(name, address, transact=transact)
+        return self._setup_reverse(name, address, transact=transact)
 
     def resolve(self, name, get='addr'):
         resolver = self.resolver(name)
@@ -107,7 +124,7 @@ class ENS:
         if address.startswith('0x'):
             address = address[2:]
         address = address.lower()
-        return address + REVERSE_REGISTRAR_DOMAIN
+        return address + '.' + REVERSE_REGISTRAR_DOMAIN
 
     @staticmethod
     def nameprep(name):
@@ -118,6 +135,11 @@ class ENS:
     def _reverse_node(self, address):
         domain = self.reverse_domain(address)
         return self.namehash(domain)
+
+    def _assert_control(self, account, name=None):
+        if account not in self.web3.eth.accounts:
+            raise UnauthorizedError("in order to modify %r, you must control account %r" % (
+                                    name, account))
 
     def _first_owner(self, name):
         '@returns (owner or None, list(unowned_subdomain_labels), first_owned_domain)'
@@ -131,6 +153,7 @@ class ENS:
                 unowned.append(pieces.pop(0))
         return (owner, unowned, name)
 
+    @dict_copy
     def _claim_ownership(self, owner, unowned, owned, transact={}):
         transact['from'] = owner
         transact['gas'] = GAS_DEFAULT['setSubnodeOwner']
@@ -143,6 +166,7 @@ class ENS:
                     )
             owned = "%s.%s" % (label, owned)
 
+    @dict_copy
     def _set_resolver(self, name, resolver_addr=None, transact={}):
         if not resolver_addr:
             resolver_addr = self.address('resolver.eth')
@@ -156,6 +180,16 @@ class ENS:
                     )
         return self._resolverContract(address=resolver_addr)
 
+    @dict_copy
+    def _setup_reverse(self, name, address, transact={}):
+        name = self._full_name(name)
+        transact['from'] = address
+        return self._reverse_registrar().setName(name, transact=transact)
+
+    def _reverse_registrar(self):
+        addr = self.ens.owner(self.namehash(REVERSE_REGISTRAR_DOMAIN))
+        return self._contract(address=addr, abi=abis.REVERSE_REGISTRAR)
+
     @staticmethod
     def _full_name(name):
         if isinstance(name, (bytes, bytearray)):
@@ -166,5 +200,13 @@ class ENS:
         return '.'.join(pieces)
 
 
+class AddressMismatch(ValueError):
+    pass
+
+
 class UnauthorizedError(Exception):
+    pass
+
+
+class UnownedName(Exception):
     pass
