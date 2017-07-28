@@ -49,10 +49,12 @@ class ENS:
     reverse = name
 
     @dict_copy
-    def setup_address(self, name, address, transact={}):
+    def setup_address(self, name, address=None, transact={}):
+        (owner, unowned, owned) = self._first_owner(name)
+        if not address:
+            address = owner
         if self.address(name) == web3.toHex(address):
             return None
-        (owner, unowned, owned) = self._first_owner(name)
         self._assert_control(owner, name)
         if unowned:
             self._claim_ownership(owner, unowned, owned, transact=transact)

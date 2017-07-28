@@ -29,7 +29,6 @@ def test_set_address_noop(enssetter, mocker, name1, addr1):
     # in case of bug where ens.py tries to set the address up, show resolver as not set
     assert enssetter.setup_address(name1, addr1) is None
     enssetter.address.assert_called_once_with(name1)
-    assert not enssetter._first_owner.called
     assert not enssetter._claim_ownership.called
     assert not enssetter._set_resolver.called
 
@@ -39,7 +38,6 @@ def test_set_address_noop_with_bytes(enssetter, mocker, name1, addr1, addrbytes1
     # in case of bug where ens.py tries to set the address up, show resolver as not set
     assert enssetter.setup_address(name1, addrbytes1) is None
     enssetter.address.assert_called_once_with(name1)
-    assert not enssetter._first_owner.called
     assert not enssetter._claim_ownership.called
     assert not enssetter._set_resolver.called
 
@@ -49,6 +47,13 @@ def test_set_address_unauthorized(enssetter, mocker, name1, addr1):
     mocker.patch.object(enssetter.web3, 'eth', wraps=enssetter.web3.eth, accounts=[])
     with pytest.raises(UnauthorizedError):
         enssetter.setup_address(name1, addr1)
+
+def test_setup_address_default_address_to_owner(enssetter, mocker, name1, addr1, addrbytes1):
+    mocker.patch.object(enssetter, 'owner', return_value=addr1)
+    enssetter.setup_address(name1)
+    resolver = enssetter._resolverContract()
+    assert resolver.setAddr.called
+    assert resolver.setAddr.call_args[0][1] == addrbytes1
 
 def test_set_address_autoselect_first_owner(enssetter, mocker, name1, addr1, addr2):
     mocker.patch.object(enssetter.web3, 'eth', wraps=enssetter.web3.eth, accounts=[addr1, addr2])
