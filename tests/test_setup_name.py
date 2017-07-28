@@ -1,6 +1,6 @@
 
 import pytest
-from unittest.mock import PropertyMock, Mock
+from unittest.mock import Mock
 
 from ens.main import UnauthorizedError, AddressMismatch, UnownedName
 
@@ -73,7 +73,7 @@ def test_setup_reverse_label_to_fullname(ens, mocker, addr1):
     registrar().setName.assert_called_once_with('castleanthrax.eth', transact={'from': addr1})
 
 def test_setup_reverse_dict_unmodified(ens, mocker, addr1):
-    registrar = mocker.patch.object(ens, '_reverse_registrar', return_value=Mock())
+    mocker.patch.object(ens, '_reverse_registrar', return_value=Mock())
     transact = {}
     ens._setup_reverse('castleanthrax', addr1, transact=transact)
     assert transact == {}

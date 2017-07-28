@@ -1,8 +1,8 @@
 
 import pytest
-from unittest.mock import PropertyMock, Mock
+from unittest.mock import Mock
 
-from ens.main import UnauthorizedError, GAS_DEFAULT
+from ens.main import UnauthorizedError
 
 '''
 API at: https://github.com/carver/ens.py/issues/2
@@ -78,7 +78,7 @@ def test_first_owner_upchain_identify(enssetter, mocker, name1, addr1, addr2):
             side_effect=lambda name: None if len(name.split('.')) >= 3 else addr2
             )
     assert enssetter._first_owner('abcdefg.bcdefgh.cdefghi.eth') == \
-            (addr2, ['abcdefg', 'bcdefgh'], 'cdefghi.eth')
+        (addr2, ['abcdefg', 'bcdefgh'], 'cdefghi.eth')
 
 def test_claim_ownership_takeover_subdomains(enssetter, mocker, name1, addr1, addr2):
     # show the name as not set up
@@ -118,13 +118,13 @@ def test_set_resolver_leave_default_resolver(enssetter, mocker, name1, addr1, ad
     mocker.patch.object(enssetter, 'namehash', side_effect=fake_hash_utf8)
     mocker.patch.object(enssetter, 'address', return_value=b'resolvHASH(bdennis.the.peasant.eth)')
     mocker.patch.object(enssetter.ens, 'resolver', side_effect=lambda node: b'resolv'+node)
-    resolver = enssetter._set_resolver(name1)
+    enssetter._set_resolver(name1)
     assert not enssetter.ens.setResolver.called
     enssetter._resolverContract.assert_called_once_with(address=enssetter.address(''))
 
 def test_set_resolver_set_default_resolver(enssetter, mocker, name1, addr1, addr2, fake_hash_utf8):
     mocker.patch.object(enssetter, 'address', side_effect=lambda name: 'addrof:'+name)
-    resolver = enssetter._set_resolver(name1)
+    enssetter._set_resolver(name1)
     assert enssetter.ens.setResolver.called
     assert enssetter.ens.setResolver.call_args[0] == (
             enssetter.namehash(name1),

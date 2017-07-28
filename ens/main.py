@@ -55,7 +55,7 @@ class ENS:
             address = owner
         if self.address(name) == web3.toHex(address):
             return None
-        self._assert_control(owner, name)
+        self._assert_control(owner, name, owned)
         if unowned:
             self._claim_ownership(owner, unowned, owned, transact=transact)
         transact['from'] = owner
@@ -138,10 +138,11 @@ class ENS:
         domain = self.reverse_domain(address)
         return self.namehash(domain)
 
-    def _assert_control(self, account, name=None):
+    def _assert_control(self, account, name, parent_owned=None):
         if account not in self.web3.eth.accounts:
-            raise UnauthorizedError("in order to modify %r, you must control account %r" % (
-                                    name, account))
+            raise UnauthorizedError(
+                    "in order to modify %r, you must control account %r, which owns %r" % (
+                        name, account, parent_owned or name))
 
     def _first_owner(self, name):
         '@returns (owner or None, list(unowned_subdomain_labels), first_owned_domain)'

@@ -81,6 +81,53 @@ assert ens.address(domain) == '0x5b2063246f2191f18f2675cedb8b28102e957458'
 eth_address = ens.owner('exchange.eth')
 ```
 
+### Set up your name
+
+#### Point your name to your address
+
+```
+ens.setup_address('jasoncarver.eth', '0x5b2063246f2191f18f2675cedb8b28102e957458')
+```
+You must already be the owner of the domain (or its parent).
+
+In the common case where you want to point the name to the owning address, you can skip the address
+```
+ens.setup_address('jasoncarver.eth')
+```
+
+You can claim arbitrarily deep subdomains. *Gas costs scale up with the number of subdomains!*
+```
+ens.setup_address('supreme.executive.power.derives.from.a.mandate.from.the.masses.jasoncarver.eth')
+```
+
+Wait for the transaction to be mined, then:
+```
+assert ens.address('supreme.executive.power.derives.from.a.mandate.from.the.masses.jasoncarver.eth') == \
+    '0x5b2063246f2191f18f2675cedb8b28102e957458'
+```
+
+#### Point your address to your name
+
+This is like Caller ID. It enables you and others to take an account and determine what name points
+to it. Sometimes this is reffered to as "reverse" resolution.
+
+```
+ens.setup_name('jasoncarver.eth', '0x5b2063246f2191f18f2675cedb8b28102e957458')
+```
+
+If you don't supply the address, `setup_name` will assume you want the address returned by
+`ens.address(name)`.
+```
+ens.setup_name('jasoncarver.eth')
+```
+If the name doesn't already point to an address, `ens.setup_name` will call `ens.setup_address` for
+you.
+
+Wait for the transaction to be mined, then:
+```
+assert ens.name('0x5b2063246f2191f18f2675cedb8b28102e957458') == 'jasoncarver.eth'
+```
+
 ### Auctions for names ending in .eth
 
 #### Get auction status

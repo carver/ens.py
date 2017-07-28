@@ -69,14 +69,20 @@ def test_entries_named_access(registrar, mocker, addr1):
     assert entries[4] is entries.top_bid
 
 @pytest.mark.parametrize(
-        'entry_attr',
-        ['status', 'close_at', 'deposit', 'top_bid']
+        'entry_attr, entry_idx',
+        [
+            ('status', 0),
+            ('close_at', 2),
+            ('deposit', 3),
+            ('top_bid', 4),
+        ]
         )
-def test_entries_method_access(registrar, mocker, entry_attr):
+def test_entries_method_access(registrar, mocker, entry_attr, entry_idx, label1):
     mocker.patch.object(registrar.core, 'entries', return_value=[0, EMPTY_ADDR, 2, 3, 4])
     mocker.patch.object(registrar, 'entries_by_hash', wraps=registrar.entries_by_hash)
     entries = registrar.entries_by_hash(b'')
     lookup = getattr(registrar, entry_attr)
+    assert lookup(label1) == entries[entry_idx]
 
 def test_entries_method_access_for_deed(registrar, mocker, addr1):
     mocker.patch.object(registrar.core, 'entries', return_value=[0, addr1, 2, 3, 4])
