@@ -65,7 +65,7 @@ assert ens.address('jasoncarver') == eth_address
 domain = ens.name('0x5b2063246f2191f18f2675cedb8b28102e957458')
 
 
-# reverse() also accepts the bytes version of the address
+# name() also accepts the bytes version of the address
 
 assert ens.name(b'[ c$o!\x91\xf1\x8f&u\xce\xdb\x8b(\x10.\x95tX') == domain
 
@@ -84,6 +84,8 @@ eth_address = ens.owner('exchange.eth')
 ### Set up your name
 
 #### Point your name to your address
+
+Do you want to set up your name so that `ens.address()` will show the address it points to?
 
 ```
 ens.setup_address('jasoncarver.eth', '0x5b2063246f2191f18f2675cedb8b28102e957458')
@@ -108,8 +110,10 @@ assert ens.address('supreme.executive.power.derives.from.a.mandate.from.the.mass
 
 #### Point your address to your name
 
+Do you want to set up your address so that `ens.name()` will show the name that points to it?
+
 This is like Caller ID. It enables you and others to take an account and determine what name points
-to it. Sometimes this is reffered to as "reverse" resolution.
+to it. Sometimes this is referred to as "reverse" resolution.
 
 ```
 ens.setup_name('jasoncarver.eth', '0x5b2063246f2191f18f2675cedb8b28102e957458')
