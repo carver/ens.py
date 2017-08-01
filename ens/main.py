@@ -132,7 +132,10 @@ class ENS:
     def nameprep(name):
         if not name:
             return name
-        return idna.decode(name, uts46=True, std3_rules=True)
+        try:
+            return idna.decode(name, uts46=True, std3_rules=True)
+        except idna.IDNAError as exc:
+            raise InvalidName("%s is an invalid name, because %s" % (name, exc)) from exc
 
     def _reverse_node(self, address):
         domain = self.reverse_domain(address)
@@ -204,6 +207,10 @@ class ENS:
 
 
 class AddressMismatch(ValueError):
+    pass
+
+
+class InvalidName(idna.IDNAError):
     pass
 
 

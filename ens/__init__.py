@@ -1,4 +1,5 @@
+# flake8: noqa
 
-from .main import ENS  # noqa
+from .main import *
 
 ens = ENS()
