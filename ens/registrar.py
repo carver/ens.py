@@ -184,16 +184,18 @@ class Registrar:
             bid_hash = Web3.toAscii(bid_hash)
         return bid_hash
 
-    def _to_label(self, label_or_name):
+    def _to_label(self, name):
         '''
         Convert from a name, like 'ethfinex.eth', to a label, like 'ethfinex'
         If name is already a label, this should be a noop, except for converting to a string
         '''
-        label = label_or_name
-        if isinstance(label, (bytes, bytearray)):
-            label = str(label, encoding=main.STRING_ENCODING)
-        if '.' in label:
-            pieces = label.split('.')
+        if isinstance(name, (bytes, bytearray)):
+            name = str(name, encoding=main.STRING_ENCODING)
+        name = self.ens.nameprep(name)
+        if '.' not in name:
+            label = name
+        else:
+            pieces = name.split('.')
             if len(pieces) != 2:
                 raise ValueError(
                         "You must specify a label, like 'tickets' "

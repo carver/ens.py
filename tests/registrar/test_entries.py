@@ -13,10 +13,11 @@ def test_entries_passthrough(registrar, mocker, hash1, label1):
     registrar.ens.labelhash.assert_called_once_with(label1)
     registrar.entries_by_hash.assert_called_once_with(hash1)
 
-def test_entries_use_label(registrar, mocker, addr1, hash1):
+@pytest.mark.parametrize("dot", ['.', '．', '。', '｡'])
+def test_entries_use_label_with_dots(registrar, mocker, addr1, hash1, dot):
     mocker.patch.object(registrar.ens, 'labelhash')
     mocker.patch.object(registrar, 'entries_by_hash')
-    registrar.entries('holygrail.eth')
+    registrar.entries('holygrail%seth' % dot)
     registrar.ens.labelhash.assert_called_once_with('holygrail')
 
 def test_entries_subdomain_meaningless(registrar, mocker, addr1, hash1):
