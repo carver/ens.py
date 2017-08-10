@@ -21,7 +21,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.4.0',
+    version='0.5.0',
 
     description='Ethereum Name Service, made easy in Python',
     long_description=long_description,
@@ -38,7 +38,7 @@ setup(
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Information Technology',
         'Topic :: Database :: Front-Ends',
         'Topic :: Internet :: Finger',
@@ -62,5 +62,5 @@ setup(
     packages=find_packages(exclude=['tests', 'venv']),
 
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['pytz', 'web3utils>=0.0.3,<1'],
+    install_requires=['pytz', 'web3utils>=0.0.4,<1'],
 )

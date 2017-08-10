@@ -10,20 +10,15 @@ small misunderstanding can cause you to lose **all** your deposit.
 Go [read about ENS](http://docs.ens.domains/en/latest/userguide.html) first.
 Your funds are your responsibility.
 
-## Alpha-quality warning
+## Beta-quality warning
 
 This is a preview for developers, and an invitation for contributions. Please do not use this in
 production until this warning is removed, especially when putting funds at risk. Examples of funds
 being at risk include: sending ether/tokens to resolved addresses and participating in name
 auctions.
 
-The [nameprep algorithm](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-137.md#name-syntax)
-implementation is not well tested, please be cautious and double-check the result through another
-channel. If you supply the name in `bytes`, it will be assumed to be UTF-8 encoded, like in
+If you supply the a domain with type `bytes`, it will be assumed to be UTF-8 encoded, like in
 [Ethereum contracts](https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI#argument-encoding).
-Currently, several of the convenience methods only split on '.' -- instead, UT-46 says that several
-other dot characters should be split, too.
-
 
 ## Setup
 
