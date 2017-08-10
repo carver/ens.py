@@ -1,5 +1,6 @@
 
 from unittest.mock import patch, MagicMock
+import pytest
 
 from web3utils import web3
 from web3utils.hex import EMPTY_SHA3_BYTES
@@ -48,6 +49,10 @@ def test_namehash_result(ens):
     assert type(namehash) == bytes
     hash_hex = web3.toHex(namehash)
     assert hash_hex == '0xf55bac2e53e0b47ee3a29324e114fc0996e651542abff256fa1daab5a68f1ff6'
+
+@pytest.mark.parametrize("alternate_dot", ['．', '。', '｡'])
+def test_namehash_alternate_dots(ens, alternate_dot):
+    assert ens.namehash('gallahad' + alternate_dot + 'eth') == ens.namehash('gallahad.eth')
 
 def test_resolver(ens, mocker, hash1, addr1):
     mocker.patch.object(ens, 'namehash', return_value=hash1)

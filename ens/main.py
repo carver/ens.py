@@ -101,7 +101,6 @@ class ENS:
         return node
 
     def resolver(self, name):
-        name = self._full_name(name)
         resolver_addr = self.ens.resolver(self.namehash(name))
         if not resolver_addr:
             return None
@@ -196,10 +195,11 @@ class ENS:
         addr = self.ens.owner(self.namehash(REVERSE_REGISTRAR_DOMAIN))
         return self._contract(address=addr, abi=abis.REVERSE_REGISTRAR)
 
-    @staticmethod
-    def _full_name(name):
+    @classmethod
+    def _full_name(cls, name):
         if isinstance(name, (bytes, bytearray)):
             name = str(name, encoding=STRING_ENCODING)
+        name = cls.nameprep(name)
         pieces = name.split('.')
         if pieces[-1] not in RECOGNIZED_TLDS:
             pieces.append(DEFAULT_TLD)
