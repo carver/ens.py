@@ -4,6 +4,7 @@ import pytest
 
 from web3utils import web3
 from web3utils.hex import EMPTY_SHA3_BYTES
+from .conftest import mkhash
 
 def test_namehash_three_labels(ens, mocker, fake_hash):
     mocker.patch.object(ens.web3, 'sha3', side_effect=fake_hash)
@@ -64,15 +65,16 @@ def test_resolver_empty(ens):
     with patch.object(ens.ens, 'resolver', return_value=None):
         assert ens.resolver('') is None
 
-def test_address(ens, mocker, hash1, addr1):
+@pytest.mark.parametrize("address", [mkhash(1), mkhash('a')])
+def test_address(ens, mocker, hash1, address):
     '''
     Using namehash is required, to expand from label to full name
     '''
     mocker.patch.object(ens, 'namehash', return_value=hash1)
     resolver = MagicMock()
-    resolver.addr.return_value = addr1
+    resolver.addr.return_value = address
     mocker.patch.object(ens, 'resolver', return_value=resolver)
-    assert ens.address('eth') == addr1
+    assert ens.address('eth') == web3.toChecksumAddress(address)
     ens.namehash.assert_called_once_with('eth')
     resolver.addr.assert_called_once_with(hash1)
 

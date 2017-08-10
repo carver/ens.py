@@ -84,7 +84,10 @@ class ENS:
         resolver = self.resolver(name)
         if resolver:
             lookup_function = getattr(resolver, get)
-            return lookup_function(self.namehash(name))
+            resolved = lookup_function(self.namehash(name))
+            if self.web3.isAddress(resolved):
+                resolved = self.web3.toChecksumAddress(resolved)
+            return resolved
         else:
             return None
 
