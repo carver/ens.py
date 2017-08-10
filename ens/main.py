@@ -4,7 +4,7 @@ from web3utils import web3, STRING_ENCODING
 from web3utils.hex import EMPTY_SHA3_BYTES, hex2bytes
 
 from ens import abis
-from ens.utils import dict_copy
+from ens.utils import dict_copy, ensure_hex
 from ens.registrar import Registrar
 
 DEFAULT_TLD = 'eth'
@@ -53,7 +53,7 @@ class ENS:
         (owner, unowned, owned) = self._first_owner(name)
         if not address:
             address = owner
-        if self.address(name) == web3.toHex(address):
+        if self.address(name) == ensure_hex(address):
             return None
         self._assert_control(owner, name, owned)
         if unowned:
@@ -120,8 +120,7 @@ class ENS:
         return self.web3.sha3(label_bytes)
 
     def reverse_domain(self, address):
-        if isinstance(address, (bytes, bytearray)):
-            address = self.web3.toHex(address)
+        address = ensure_hex(address)
         if address.startswith('0x'):
             address = address[2:]
         address = address.lower()

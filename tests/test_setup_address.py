@@ -123,7 +123,7 @@ def test_set_resolver_leave_default_resolver(enssetter, mocker, name1, addr1, ad
     enssetter._resolverContract.assert_called_once_with(address=enssetter.address(''))
 
 def test_set_resolver_set_default_resolver(enssetter, mocker, name1, addr1, addr2, fake_hash_utf8):
-    mocker.patch.object(enssetter, 'address', side_effect=lambda name: 'addrof:'+name)
+    mocker.patch.object(enssetter, 'address', side_effect=lambda name: b'addrof:'+name.encode('utf8'))
     enssetter._set_resolver(name1)
     assert enssetter.ens.setResolver.called
     assert enssetter.ens.setResolver.call_args[0] == (

@@ -1,4 +1,6 @@
 
+from web3 import Web3
+
 
 def dict_copy(func):
     "copy dict keyword args, to avoid modifying caller's copy"
@@ -11,3 +13,9 @@ def dict_copy(func):
                 new_kwargs[var] = kwargs[var]
         return func(*args, **new_kwargs)
     return proxy
+
+
+def ensure_hex(data):
+    if isinstance(data, (bytes, bytearray)):
+        return Web3.toHex(data)
+    return data
