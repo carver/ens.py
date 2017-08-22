@@ -1,6 +1,7 @@
 
 import idna
 from web3utils import web3, STRING_ENCODING
+from web3utils.chainstate import stalecheck
 from web3utils.constants import EMPTY_SHA3_BYTES
 from web3utils.encodings import hex2bytes
 
@@ -41,13 +42,25 @@ class ENS:
         self._resolverContract = self._contract(abi=abis.RESOLVER)
         self.registrar = Registrar(self)
 
+        for method_name in (
+                'address',
+                'name',
+                'setup_address',
+                'setup_name',
+                'resolve',
+                'resolver',
+                'reverser',
+                'owner',
+                ):
+            self._wrap_fresh_assertion(method_name)
+        self.reverse = self.name
+
     def address(self, name):
         return self.resolve(name, 'addr')
 
     def name(self, address):
         reversed_domain = self.reverse_domain(address)
         return self.resolve(reversed_domain, get='name')
-    reverse = name
 
     @dict_copy
     def setup_address(self, name, address=None, transact={}):
@@ -197,6 +210,13 @@ class ENS:
     def _reverse_registrar(self):
         addr = self.ens.owner(self.namehash(REVERSE_REGISTRAR_DOMAIN))
         return self._contract(address=addr, abi=abis.REVERSE_REGISTRAR)
+
+    def _wrap_fresh_assertion(self, method_name):
+        '''
+        Require that the latest block is recent every time method_name is called
+        '''
+        wrapped = stalecheck(self.web3, seconds=3)(getattr(self, method_name))
+        setattr(self, method_name, wrapped)
 
     @classmethod
     def _full_name(cls, name):

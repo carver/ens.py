@@ -68,10 +68,11 @@ def secret1():
     return 'SUCH_SAFE_MUCH_SECRET'
 
 @pytest.fixture
-def ens():
+def ens(mocker):
     web3 = REAL_WEB3
     web3.setProvider(EthereumTesterProvider())
     web3 = Mock(wraps=REAL_WEB3)
+    mocker.patch('web3utils.chainstate.isfresh', return_value=True)
     return ENS(web3)
 
 @pytest.fixture

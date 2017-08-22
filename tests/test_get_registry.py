@@ -3,6 +3,7 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 from web3utils import web3
+from web3utils.chainstate import StaleBlockchain
 from web3utils.constants import EMPTY_SHA3_BYTES
 from .conftest import mkhash
 
@@ -107,6 +108,11 @@ def test_owner_passthrough_namehash_result(ens, mocker, hash1):
     mocker.patch.object(ens.ens, 'owner')
     ens.owner('')
     ens.ens.owner.assert_called_once_with(hash1)
+
+def test_owner_stale(ens, mocker):
+    mocker.patch('web3utils.chainstate.isfresh', return_value=False)
+    with pytest.raises(StaleBlockchain):
+        ens.owner('')
 
 def test_labelhash(ens):
     labelhash = ens.labelhash('eth')
