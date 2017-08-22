@@ -6,7 +6,7 @@ from enum import IntEnum
 import pytz
 from web3 import Web3
 from web3utils import STRING_ENCODING
-from web3utils.hex import is_empty_hex
+from web3utils.encodings import is_empty_hex
 
 from ens import abis, main
 

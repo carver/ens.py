@@ -1,7 +1,8 @@
 
 import idna
 from web3utils import web3, STRING_ENCODING
-from web3utils.hex import EMPTY_SHA3_BYTES, hex2bytes
+from web3utils.constants import EMPTY_SHA3_BYTES
+from web3utils.encodings import hex2bytes
 
 from ens import abis
 from ens.utils import dict_copy, ensure_hex

@@ -1,7 +1,7 @@
 
 import pytest
 
-from web3utils.hex import EMPTY_ADDR
+from web3utils.constants import EMPTY_ADDR
 
 from ens.registrar import Status
 

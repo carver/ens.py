@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 from web3utils import web3
-from web3utils.hex import EMPTY_SHA3_BYTES
+from web3utils.constants import EMPTY_SHA3_BYTES
 from .conftest import mkhash
 
 def test_namehash_three_labels(ens, mocker, fake_hash):
