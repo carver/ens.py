@@ -6,6 +6,7 @@ from enum import IntEnum
 import pytz
 from web3 import Web3
 from web3utils import STRING_ENCODING
+from web3utils.chainstate import stalecheck
 from web3utils.encodings import is_empty_hex
 
 from ens import abis, main
@@ -59,6 +60,7 @@ class Registrar:
         self._core = None
         self._deedContract = ens._contract(abi=abis.DEED)
         self._short_invalid = True
+        self.entries = stalecheck(self.web3, hours=main.ACCEPTABLE_STALE_HOURS)(self.entries)
 
     def entries(self, label):
         label = self._to_label(label)

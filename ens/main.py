@@ -22,6 +22,8 @@ GAS_DEFAULT = {
     'setSubnodeOwner': 60003,
     }
 
+ACCEPTABLE_STALE_HOURS = 48
+
 
 class ENS:
     '''
@@ -215,7 +217,7 @@ class ENS:
         '''
         Require that the latest block is recent every time method_name is called
         '''
-        wrapped = stalecheck(self.web3, seconds=3)(getattr(self, method_name))
+        wrapped = stalecheck(self.web3, hours=ACCEPTABLE_STALE_HOURS)(getattr(self, method_name))
         setattr(self, method_name, wrapped)
 
     @classmethod

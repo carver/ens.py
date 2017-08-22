@@ -1,6 +1,7 @@
 
 import pytest
 
+from web3utils.chainstate import StaleBlockchain
 from web3utils.constants import EMPTY_ADDR
 
 from ens.registrar import Status
@@ -89,3 +90,15 @@ def test_entries_method_access_for_deed(registrar, mocker, addr1):
     mocker.patch.object(registrar.core, 'entries', return_value=[0, addr1, 2, 3, 4])
     entries = registrar.entries_by_hash(b'')
     assert entries.deed._web3py_contract.address == addr1
+
+def test_entries_stale(registrar, mocker, hash1):
+    mocker.patch.object(registrar.core, 'entries', return_value=[0, EMPTY_ADDR, 2, 3, 4])
+    mocker.patch('web3utils.chainstate.isfresh', return_value=False)
+    with pytest.raises(StaleBlockchain):
+        registrar.entries(hash1)
+
+def test_status_stale(registrar, mocker, label1):
+    mocker.patch.object(registrar.core, 'entries', return_value=[0, EMPTY_ADDR, 2, 3, 4])
+    mocker.patch('web3utils.chainstate.isfresh', return_value=False)
+    with pytest.raises(StaleBlockchain):
+        registrar.status(label1)
