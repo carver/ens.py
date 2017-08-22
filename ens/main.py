@@ -8,7 +8,7 @@ from ens.utils import dict_copy, ensure_hex
 from ens.registrar import Registrar
 
 DEFAULT_TLD = 'eth'
-RECOGNIZED_TLDS = [DEFAULT_TLD, 'reverse']
+RECOGNIZED_TLDS = [DEFAULT_TLD, 'reverse', 'test']
 
 ENS_MAINNET_ADDR = '0x314159265dd8dbb310642f98f50c066173c1259b'
 
