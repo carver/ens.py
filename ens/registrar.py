@@ -5,11 +5,8 @@ from enum import IntEnum
 
 import pytz
 from web3 import Web3
-from web3utils import STRING_ENCODING
-from web3utils.chainstate import stalecheck
-from web3utils.encodings import is_empty_hex
 
-from ens import abis, main
+from ens import abis
 
 REGISTRAR_NAME = 'eth'
 
@@ -55,12 +52,11 @@ class Registrar:
     def __init__(self, ens):
         self.ens = ens
         self.web3 = ens.web3
-        self._coreContract = ens._contract(abi=abis.AUCTION_REGISTRAR)
+        self._coreContract = self.web3.eth.contract(abi=abis.AUCTION_REGISTRAR)
         # delay generating this contract so that this class can be created before web3 is online
         self._core = None
-        self._deedContract = ens._contract(abi=abis.DEED)
+        self._deedContract = self.web3.eth.contract(abi=abis.DEED)
         self._short_invalid = True
-        self.entries = stalecheck(self.web3, hours=main.ACCEPTABLE_STALE_HOURS)(self.entries)
 
     def entries(self, label):
         label = self._to_label(label)
@@ -88,7 +84,8 @@ class Registrar:
         """
         @param label to bid on
         @param amount (in wei) to bid
-        @param secret you MUST keep a copy of this to avoid burning your entire bid
+        @param secret - as bytes, str, or int. You MUST keep a copy
+            of this to avoid burning your entire deposit!
         """
         if not modifier_dict:
             modifier_dict = {'transact': {}}
@@ -119,9 +116,7 @@ class Registrar:
         if not self.core.sealedBids(sender, bid_hash):
             raise InvalidBidHash
         label_hash = self.ens.labelhash(label)
-        if isinstance(secret, str):
-            secret = secret.encode(STRING_ENCODING)
-        secret_hash = self.web3.sha3(secret)
+        secret_hash = self._secret_hash(secret)
         return self.core.unsealBid(label_hash, amount, secret_hash, **modifier_dict)
     unseal = reveal
 
@@ -147,7 +142,7 @@ class Registrar:
         entries = self.core.entries(label_hash)
         return AuctionEntries(
             Status(entries[0]),
-            self._deedContract(entries[1]) if not is_empty_hex(entries[1]) else None,
+            self._deedContract(entries[1]) if Web3.toDecimal(hexstr=entries[1]) else None,
             datetime.fromtimestamp(entries[2], pytz.utc) if entries[2] else None,
             entries[3],
             entries[4],
@@ -178,13 +173,19 @@ class Registrar:
 
     def _bid_hash(self, label, bidder, bid_amount, secret):
         label_hash = self.ens.labelhash(label)
-        secret_hash = self.web3.sha3(secret, encoding='bytes')
+        secret_hash = self._secret_hash(secret)
         bid_hash = self.core.shaBid(label_hash, bidder, bid_amount, secret_hash)
         # deal with web3.py returning a string instead of bytes:
         if isinstance(bid_hash, str):
-            bid_hash = Web3.toHex(bid_hash)
-            bid_hash = Web3.toAscii(bid_hash)
+            bid_hash = bytes(bid_hash, encoding='latin-1')
         return bid_hash
+
+    @staticmethod
+    def _secret_hash(secret):
+        if isinstance(secret, str):
+            secret = secret.encode()
+        secret_hash = Web3.sha3(secret)
+        return Web3.toBytes(hexstr=secret_hash)
 
     def _to_label(self, name):
         '''
@@ -192,7 +193,7 @@ class Registrar:
         If name is already a label, this should be a noop, except for converting to a string
         '''
         if isinstance(name, (bytes, bytearray)):
-            name = str(name, encoding=main.STRING_ENCODING)
+            name = name.decode()
         name = self.ens.nameprep(name)
         if '.' not in name:
             label = name

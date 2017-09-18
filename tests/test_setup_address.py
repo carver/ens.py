@@ -2,6 +2,8 @@
 import pytest
 from unittest.mock import Mock
 
+from web3 import Web3
+
 from ens.main import UnauthorizedError
 
 '''
@@ -123,12 +125,13 @@ def test_set_resolver_leave_default_resolver(enssetter, mocker, name1, addr1, ad
     enssetter._resolverContract.assert_called_once_with(address=enssetter.address(''))
 
 def test_set_resolver_set_default_resolver(enssetter, mocker, name1, addr1, addr2, fake_hash_utf8):
-    mocker.patch.object(enssetter, 'address', side_effect=lambda name: b'addrof:'+name.encode('utf8'))
+    addr_of_name = lambda name: Web3.toHex(text=name)[:42]
+    mocker.patch.object(enssetter, 'address', side_effect=addr_of_name)
     enssetter._set_resolver(name1)
     assert enssetter.ens.setResolver.called
     assert enssetter.ens.setResolver.call_args[0] == (
             enssetter.namehash(name1),
-            b'addrof:resolver.eth',
+            b'resolver.eth',
             )
 
 def test_set_address_set_resolver(enssetter, mocker, name1, addr1, addr2, fake_hash_utf8):
