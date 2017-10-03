@@ -53,7 +53,7 @@ setup(
     ],
 
     # What does your project relate to?
-    keywords='ethereum eth web3 web3.py ENS web3utils',
+    keywords='ethereum eth web3 web3.py ENS',
 
     python_requires='>=3.5',
 

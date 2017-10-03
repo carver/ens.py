@@ -30,7 +30,9 @@ class ENS:
 
     def __init__(self, providers=None, addr=None):
         '''
-        if you pass a custom_web3, make sure it is web3utils-style web3
+        @param providers is a provider or list of providers for web3
+        @param addr is the address of the ENS registry on-chain. If not provided,
+            ENS.py will default to the mainnet ENS registry address.
         '''
         self.web3 = init_web3(providers)
 

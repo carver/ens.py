@@ -1,5 +1,4 @@
 venv
-web3utils
 *.pyc
 __pycache__
 *.swp
