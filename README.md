@@ -311,6 +311,18 @@ pip install -e .
 pip install -r requirements-dev.txt
 ```
 
+### Testing Setup
+
+Re-run flake on file changes:
+
+```
+$ when-changed -s -1 -r ens/ tests/ -c "clear; echo; echo \"running flake - $(date)\"; warn()
+{
+notify-send -t 5000 'Flake8 failure ⚠⚠⚠⚠⚠' 'flake8 on ens.py failed'
+}
+if ! git diff | flake8 --diff | grep "\.py"; then if ! flake8 ens/ tests/; then warn; fi else warn; fi; echo done"
+```
+
 ### Why does ens.py require python 3?
 
 *Short version*
