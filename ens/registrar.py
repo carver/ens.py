@@ -142,7 +142,7 @@ class Registrar:
         entries = self.core.entries(label_hash)
         return AuctionEntries(
             Status(entries[0]),
-            self._deedContract(entries[1]) if Web3.toDecimal(hexstr=entries[1]) else None,
+            self._deedContract(entries[1]) if entries[1] else None,
             datetime.fromtimestamp(entries[2], pytz.utc) if entries[2] else None,
             entries[3],
             entries[4],
