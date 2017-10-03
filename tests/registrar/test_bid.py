@@ -14,8 +14,8 @@ def test_bid_requires_from(reg_bid, label1, secret1):
     with pytest.raises(TypeError):
         reg_bid.bid(label1, 1, secret1)
 
-def test_bid_nameprep(reg_bid, mocker, fake_hash, fake_hash_utf8, value1, secret1, addr1):
-    mocker.patch.object(reg_bid.web3, 'sha3', side_effect=fake_hash)
+def test_bid_nameprep(reg_bid, mocker, fake_hash_hexout, fake_hash_utf8, value1, secret1, addr1):
+    mocker.patch('web3.Web3.sha3', side_effect=fake_hash_hexout)
     reg_bid.bid("ÖÖÖÖÖÖÖ.eth", value1, secret1, transact={'from': addr1})
     reg_bid.core.shaBid.assert_called_once_with(
             fake_hash_utf8("ööööööö"),
@@ -24,8 +24,8 @@ def test_bid_nameprep(reg_bid, mocker, fake_hash, fake_hash_utf8, value1, secret
             fake_hash_utf8(secret1),
             )
 
-def test_bid_hash(reg_bid, mocker, fake_hash, fake_hash_utf8, label1, value1, secret1, addr1):
-    mocker.patch.object(reg_bid.web3, 'sha3', side_effect=fake_hash)
+def test_bid_hash(reg_bid, mocker, fake_hash_hexout, fake_hash_utf8, label1, value1, secret1, addr1):
+    mocker.patch('web3.Web3.sha3', side_effect=fake_hash_hexout)
     mocker.patch.object(reg_bid.ens, 'labelhash', side_effect=fake_hash_utf8)
     reg_bid.bid(label1, value1, secret1, transact={'from': addr1})
     reg_bid.core.shaBid.assert_called_once_with(
@@ -35,8 +35,8 @@ def test_bid_hash(reg_bid, mocker, fake_hash, fake_hash_utf8, label1, value1, se
             fake_hash_utf8(secret1),
             )
 
-def test_bid_convert_to_label(reg_bid, mocker, fake_hash, fake_hash_utf8, value1, secret1, addr1):
-    mocker.patch.object(reg_bid.web3, 'sha3', side_effect=fake_hash)
+def test_bid_convert_to_label(reg_bid, mocker, fake_hash_hexout, fake_hash_utf8, value1, secret1, addr1):
+    mocker.patch('web3.Web3.sha3', side_effect=fake_hash_hexout)
     reg_bid.bid('fullname.eth', value1, secret1, transact={'from': addr1})
     reg_bid.core.shaBid.assert_called_once_with(
             b"HASH(bfullname)",

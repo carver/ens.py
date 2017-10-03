@@ -4,7 +4,6 @@ from unittest.mock import Mock
 
 from web3 import Web3
 from web3.providers.tester import EthereumTesterProvider
-from web3utils import web3 as REAL_WEB3
 
 from ens import ENS
 
@@ -25,7 +24,7 @@ def addr9():
 
 @pytest.fixture
 def addrbytes1(addr1):
-    return Web3.toAscii(addr1)
+    return Web3.toBytes(hexstr=addr1)
 
 @pytest.fixture
 def hash1():
@@ -37,11 +36,11 @@ def hash9():
 
 @pytest.fixture
 def hashbytes1(hash1):
-    return Web3.toAscii(hash1)
+    return Web3.toBytes(hexstr=hash1)
 
 @pytest.fixture
 def hashbytes9(hash9):
-    return Web3.toAscii(hash9)
+    return Web3.toBytes(hexstr=hash9)
 
 @pytest.fixture
 def name1():
@@ -69,11 +68,10 @@ def secret1():
 
 @pytest.fixture
 def ens(mocker):
-    web3 = REAL_WEB3
-    web3.setProvider(EthereumTesterProvider())
-    web3 = Mock(wraps=REAL_WEB3)
-    mocker.patch('web3utils.chainstate.isfresh', return_value=True)
-    return ENS(web3)
+    ens = ENS(EthereumTesterProvider())
+    ens.web3 = Mock(wraps=ens.web3)
+    mocker.patch('web3.middleware.stalecheck._isfresh', return_value=True)
+    return ens
 
 @pytest.fixture
 def registrar(ens, monkeypatch, addr9):
@@ -81,17 +79,18 @@ def registrar(ens, monkeypatch, addr9):
     return ens.registrar
 
 @pytest.fixture
-def fake_hash():
-    def _fake_hash(tohash, encoding=None):
-        if type(tohash) == bytes and not encoding:
-            encoding = 'bytes'
-        assert encoding == 'bytes'
-        if isinstance(tohash, str):
-            tohash = tohash.encode('utf-8')
+def fake_hash_hexout():
+    def _fake_hash(tohash):
+        assert isinstance(tohash, bytes)
         tohash = b'b'+tohash
-        return b'HASH(%s)' % tohash
+        hash_bytes = b'HASH(%s)' % tohash
+        return Web3.toHex(hash_bytes)
     return _fake_hash
 
 @pytest.fixture
+def fake_hash(fake_hash_hexout):
+    return lambda name: Web3.toBytes(hexstr=fake_hash_hexout(name))
+
+@pytest.fixture
 def fake_hash_utf8(fake_hash):
-    return lambda name: fake_hash(name, encoding='bytes')
+    return lambda name: fake_hash(name.encode())

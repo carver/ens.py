@@ -53,7 +53,7 @@ setup(
     ],
 
     # What does your project relate to?
-    keywords='ethereum eth web3 web3.py ENS web3utils',
+    keywords='ethereum eth web3 web3.py ENS',
 
     python_requires='>=3.5',
 
@@ -62,5 +62,5 @@ setup(
     packages=find_packages(exclude=['tests', 'venv']),
 
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['pytz', 'web3utils>=0.1.3,<1'],
+    install_requires=['pytz', 'web3>=3.16.1,<4'],
 )

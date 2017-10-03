@@ -1,13 +1,12 @@
 
 import idna
-from web3utils import web3, STRING_ENCODING
-from web3utils.chainstate import stalecheck
-from web3utils.constants import EMPTY_SHA3_BYTES
-from web3utils.encodings import hex2bytes
+
+from web3 import Web3
 
 from ens import abis
-from ens.utils import dict_copy, ensure_hex
+from ens.constants import EMPTY_SHA3_BYTES
 from ens.registrar import Registrar
+from ens.utils import dict_copy, ensure_hex, init_web3
 
 DEFAULT_TLD = 'eth'
 RECOGNIZED_TLDS = [DEFAULT_TLD, 'reverse', 'test']
@@ -22,8 +21,6 @@ GAS_DEFAULT = {
     'setSubnodeOwner': 60003,
     }
 
-ACCEPTABLE_STALE_HOURS = 48
-
 
 class ENS:
     '''
@@ -31,31 +28,18 @@ class ENS:
     "0x314159265dd8dbb310642f98f50c066173c1259b"
     '''
 
-    def __init__(self, custom_web3=None, addr=None):
+    def __init__(self, providers=None, addr=None):
         '''
-        if you pass a custom_web3, make sure it is web3utils-style web3
+        @param providers is a provider or list of providers for web3
+        @param addr is the address of the ENS registry on-chain. If not provided,
+            ENS.py will default to the mainnet ENS registry address.
         '''
-        self.web3 = custom_web3 if custom_web3 else web3
-        assert hasattr(self.web3.eth, 'original_contract')
-        self._contract = self.web3.eth.contract
+        self.web3 = init_web3(providers)
 
         ens_addr = addr if addr else ENS_MAINNET_ADDR
-        self.ens = self._contract(abi=abis.ENS, address=ens_addr)
-        self._resolverContract = self._contract(abi=abis.RESOLVER)
+        self.ens = self.web3.eth.contract(abi=abis.ENS, address=ens_addr)
+        self._resolverContract = self.web3.eth.contract(abi=abis.RESOLVER)
         self.registrar = Registrar(self)
-
-        for method_name in (
-                'address',
-                'name',
-                'setup_address',
-                'setup_name',
-                'resolve',
-                'resolver',
-                'reverser',
-                'owner',
-                ):
-            self._wrap_fresh_assertion(method_name)
-        self.reverse = self.name
 
     def address(self, name):
         return self.resolve(name, 'addr')
@@ -63,6 +47,7 @@ class ENS:
     def name(self, address):
         reversed_domain = self.reverse_domain(address)
         return self.resolve(reversed_domain, get='name')
+    reverse = name
 
     @dict_copy
     def setup_address(self, name, address=None, transact={}):
@@ -77,7 +62,11 @@ class ENS:
         transact['from'] = owner
         resolver = self._set_resolver(name, transact=transact)
         transact['gas'] = GAS_DEFAULT['setAddr']
-        return resolver.setAddr(self.namehash(name), hex2bytes(address), transact=transact)
+        if isinstance(address, str):
+            address = Web3.toBytes(hexstr=address)
+        else:
+            address = Web3.toBytes(address)
+        return resolver.setAddr(self.namehash(name), address, transact=transact)
 
     @dict_copy
     def setup_name(self, name, address=None, transact={}):
@@ -114,9 +103,10 @@ class ENS:
             labels = name.split(".")
             for label in reversed(labels):
                 labelhash = self.labelhash(label)
-                assert type(labelhash) == bytes
-                assert type(node) == bytes
-                node = self.web3.sha3(node + labelhash)
+                assert isinstance(labelhash, bytes)
+                assert isinstance(node, bytes)
+                sha_hex = Web3.sha3(node + labelhash)
+                node = Web3.toBytes(hexstr=sha_hex)
         return node
 
     def resolver(self, name):
@@ -135,8 +125,9 @@ class ENS:
 
     def labelhash(self, label):
         prepped = self.nameprep(label)
-        label_bytes = prepped.encode(STRING_ENCODING)
-        return self.web3.sha3(label_bytes)
+        label_bytes = prepped.encode()
+        sha_hex = Web3.sha3(label_bytes)
+        return Web3.toBytes(hexstr=sha_hex)
 
     def reverse_domain(self, address):
         address = ensure_hex(address)
@@ -198,7 +189,7 @@ class ENS:
             transact['gas'] = GAS_DEFAULT['setResolver']
             self.ens.setResolver(
                     namehash,
-                    hex2bytes(resolver_addr),
+                    Web3.toBytes(hexstr=resolver_addr),
                     transact=transact
                     )
         return self._resolverContract(address=resolver_addr)
@@ -211,19 +202,12 @@ class ENS:
 
     def _reverse_registrar(self):
         addr = self.ens.owner(self.namehash(REVERSE_REGISTRAR_DOMAIN))
-        return self._contract(address=addr, abi=abis.REVERSE_REGISTRAR)
-
-    def _wrap_fresh_assertion(self, method_name):
-        '''
-        Require that the latest block is recent every time method_name is called
-        '''
-        wrapped = stalecheck(self.web3, hours=ACCEPTABLE_STALE_HOURS)(getattr(self, method_name))
-        setattr(self, method_name, wrapped)
+        return self.web3.eth.contract(address=addr, abi=abis.REVERSE_REGISTRAR)
 
     @classmethod
     def _full_name(cls, name):
         if isinstance(name, (bytes, bytearray)):
-            name = str(name, encoding=STRING_ENCODING)
+            name = Web3.toText(name)
         name = cls.nameprep(name)
         pieces = name.split('.')
         if pieces[-1] not in RECOGNIZED_TLDS:

@@ -3,3 +3,4 @@ pytest
 eth-testrpc>1,<2
 pytest-mock
 flake8>3,<4
+pytest-watch
