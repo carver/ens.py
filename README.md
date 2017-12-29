@@ -256,6 +256,10 @@ assert web3.fromWei(top_bid, 'ether') == Decimal('201709.02')
 
 ## Setup details
 
+### Web3.py version
+
+This library only works with v3.* of the web3.py library. v4.* of Web3.py comes with its own ens module, but no auction support. For auction support compatible with web3.py v4, see https://github.com/carver/ensauction.py
+
 ### If Python 2 is your default, or you're not sure
 
 In your shell
