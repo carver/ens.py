@@ -1,7 +1,8 @@
+# This Library is Deprecated
+
+`ens.py` continues to exist only for people who might want to use ENS with the old web3.py v3. If you want ENS in web3.py v4, then good news: it comes pre-installed! Learn how to [interact with ENS in the web3.py docs](https://web3py.readthedocs.io/en/stable/ens_overview.html). If you already know how to use `ens.py`, then the new API should be very familiar, because it is a ported version of this `ens.py` library.
 
 # Ethereum Name Service via Python
-
-[![Join the chat at https://gitter.im/ens-py/Lobby](https://badges.gitter.im/ens-py/Lobby.svg)](https://gitter.im/ens-py/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Access the Ethereum Name Service using this python library. Note: **this is a work in progress**
 
